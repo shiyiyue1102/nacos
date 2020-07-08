@@ -25,9 +25,10 @@ public class StreamServiceGrpcImpl extends GrpcStreamServiceGrpc.GrpcStreamServi
 
     private Map<String, StreamObserver<GrpcResponse>> grpcClients = new ConcurrentHashMap<>();
 
+    @Override
     public void streamRequest(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
 
-        Loggers.GRPC.info("new connection {}", request.getClientId());
+        Loggers.GRPC.info("new connection {0},detail={1}", request.getClientId(),request.getMetadata());
         grpcClients.put(request.getClientId(), responseObserver);
         connectionManager.putIfAbsent(new Connection(request.getClientId(), ConnectionType.GRPC));
         connectionManager.listen(request.getClientId(), new GrpcConnectionEventListener());

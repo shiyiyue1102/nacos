@@ -1,18 +1,22 @@
 package com.alibaba.nacos.core.remoting;
 
-
-import com.alibaba.nacos.core.remoting.grpc.impl.StreamServiceGrpcImpl;
-import com.alibaba.nacos.core.utils.Loggers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-@Component
+import javax.annotation.PostConstruct;
+
+import com.alibaba.nacos.core.remoting.Connection;
+import com.alibaba.nacos.core.remoting.ConnectionManager;
+import com.alibaba.nacos.core.remoting.PushService;
+import com.alibaba.nacos.core.remoting.grpc.impl.StreamServiceGrpcImpl;
+import com.alibaba.nacos.core.utils.Loggers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
 public class PushManager {
 
     @Autowired

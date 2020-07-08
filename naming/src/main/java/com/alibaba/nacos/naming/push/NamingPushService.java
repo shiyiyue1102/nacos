@@ -60,7 +60,7 @@ public class NamingPushService implements ApplicationContextAware, ApplicationLi
     private ConnectionManager connectionManager;
 
     @Autowired
-    private PushManager pushManager;
+    private PushManager gRPCPushManager;
 
     private ApplicationContext applicationContext;
 
@@ -199,7 +199,7 @@ public class NamingPushService implements ApplicationContextAware, ApplicationLi
 
                         if (client.getType().equals(NamingSuscribeType.GRPC.name())) {
                             PushClient.GrpcPushClient grpcClient = (PushClient.GrpcPushClient) client;
-                            pushManager.pushChange(grpcClient.getClientId(), grpcClient.getServiceName(), (byte[]) ackEntry.origin);
+                            gRPCPushManager.pushChange(grpcClient.getClientId(), grpcClient.getServiceName(), (byte[]) ackEntry.origin);
                         } else {
                             udpPush(ackEntry);
                         }

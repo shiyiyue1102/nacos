@@ -15,6 +15,25 @@
  */
 package com.alibaba.nacos.client.config.impl;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.config.ConfigType;
@@ -22,7 +41,10 @@ import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.client.config.common.GroupKey;
 import com.alibaba.nacos.client.config.filter.impl.ConfigFilterChainManager;
+import com.alibaba.nacos.client.config.grpc.AbstractStreamMessageHandler;
+import com.alibaba.nacos.client.config.grpc.ConfigGrpcClient;
 import com.alibaba.nacos.client.config.http.HttpAgent;
+import com.alibaba.nacos.client.config.http.ServerHttpAgent;
 import com.alibaba.nacos.client.config.impl.HttpSimpleClient.HttpResult;
 import com.alibaba.nacos.client.config.utils.ContentUtils;
 import com.alibaba.nacos.client.config.utils.MD5;
@@ -30,24 +52,14 @@ import com.alibaba.nacos.client.monitor.MetricsMonitor;
 import com.alibaba.nacos.client.utils.LogUtils;
 import com.alibaba.nacos.client.utils.ParamUtil;
 import com.alibaba.nacos.client.utils.TenantUtil;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URLDecoder;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
+import static com.alibaba.nacos.api.common.Constants.CONFIG_TYPE;
 import static com.alibaba.nacos.api.common.Constants.LINE_SEPARATOR;
 import static com.alibaba.nacos.api.common.Constants.WORD_SEPARATOR;
-import static com.alibaba.nacos.api.common.Constants.CONFIG_TYPE;
 
 /**
  * Longpolling
@@ -75,6 +87,11 @@ public class ClientWorker {
                 removeCache(dataId, group);
             }
         }
+        try {
+            configGrpcClient.removeListener(dataId,group);
+        } catch (NacosException e) {
+            e.printStackTrace();
+        }
     }
 
     public void addTenantListeners(String dataId, String group, List<? extends Listener> listeners) throws NacosException {
@@ -84,6 +101,8 @@ public class ClientWorker {
         for (Listener listener : listeners) {
             cache.addListener(listener);
         }
+        configGrpcClient.addListener(dataId,group);
+
     }
 
     public void addTenantListenersWithContent(String dataId, String group, String content, List<? extends Listener> listeners) throws NacosException {
@@ -94,9 +113,11 @@ public class ClientWorker {
         for (Listener listener : listeners) {
             cache.addListener(listener);
         }
+
+        configGrpcClient.addListener(dataId,group);
     }
 
-    public void removeTenantListener(String dataId, String group, Listener listener) {
+    public void removeTenantListener(String dataId, String group, Listener listener)  {
         group = null2defaultGroup(group);
         String tenant = agent.getTenant();
         CacheData cache = getCache(dataId, group, tenant);
@@ -106,6 +127,12 @@ public class ClientWorker {
                 removeCache(dataId, group, tenant);
             }
         }
+        try {
+            configGrpcClient.removeListener(dataId,group);
+        } catch (NacosException e) {
+            e.printStackTrace();
+        }
+
     }
 
     void removeCache(String dataId, String group) {
@@ -439,13 +466,48 @@ public class ClientWorker {
     }
 
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
-    public ClientWorker(final HttpAgent agent, final ConfigFilterChainManager configFilterChainManager, final Properties properties) {
+    public ClientWorker(   final HttpAgent agent, final ConfigFilterChainManager configFilterChainManager, final Properties properties) {
         this.agent = agent;
         this.configFilterChainManager = configFilterChainManager;
 
         // Initialize the timeout parameter
 
         init(properties);
+
+        if (agent instanceof ServerHttpAgent){
+            ServerHttpAgent serverHttpAgent=(ServerHttpAgent)agent;
+            configGrpcClient=new ConfigGrpcClient(serverHttpAgent.getServerListManager());
+
+            configGrpcClient.initResponseHandler(new AbstractStreamMessageHandler() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    String group = response.getString("group");
+                    String dataId = response.getString("dataId");
+                    String cacheKey = GroupKey.getKey(dataId, group);
+
+                    String tenant = null;
+                    try{
+                        if (cacheMap.get()!=null&&cacheMap.get().containsKey(cacheKey)){
+                            CacheData cache = cacheMap.get().get(GroupKey.getKeyTenant(dataId, group, tenant));
+                            String[] ct = getServerConfig(dataId, group, tenant, 3000L);
+                            cache.setContent(ct[0]);
+                            if (null != ct[1]) {
+                                cache.setType(ct[1]);
+                            }
+                            cache.checkListenerMd5();
+                        }
+                    } catch (NacosException ioe) {
+                    String message = String.format(
+                        "[%s] [get-update] get changed config exception. dataId=%s, group=%s, tenant=%s",
+                        agent.getName(), dataId, group, tenant);
+                    LOGGER.error(message, ioe);
+                    }
+                }
+            });
+
+        }
+
+
 
         executor = Executors.newScheduledThreadPool(1, new ThreadFactory() {
             @Override
@@ -467,16 +529,18 @@ public class ClientWorker {
             }
         });
 
-        executor.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    checkConfigInfo();
-                } catch (Throwable e) {
-                    LOGGER.error("[" + agent.getName() + "] [sub-check] rotate check error", e);
-                }
-            }
-        }, 1L, 10L, TimeUnit.MILLISECONDS);
+
+        //TODO zunfei.lzf cancel longpolling
+        //executor.scheduleWithFixedDelay(new Runnable() {
+        //    @Override
+        //    public void run() {
+        //        try {
+        //            checkConfigInfo();
+        //        } catch (Throwable e) {
+        //            LOGGER.error("[" + agent.getName() + "] [sub-check] rotate check error", e);
+        //        }
+        //    }
+        //}, 1L, 10L, TimeUnit.MILLISECONDS);
     }
 
     private void init(Properties properties) {
@@ -590,4 +654,6 @@ public class ClientWorker {
     private double currentLongingTaskCount = 0;
     private int taskPenaltyTime;
     private boolean enableRemoteSyncConfig = false;
+
+    private ConfigGrpcClient configGrpcClient;
 }

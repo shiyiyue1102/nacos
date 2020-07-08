@@ -29,6 +29,7 @@ public class RequestServiceGrpcImpl extends GrpcServiceGrpc.GrpcServiceImplBase 
         requestHandlers.putIfAbsent(name, handler);
     }
 
+    @Override
     public void request(GrpcRequest request,
                         StreamObserver<GrpcResponse> responseObserver) {
         try {

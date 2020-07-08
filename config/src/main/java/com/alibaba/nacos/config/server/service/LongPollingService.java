@@ -15,22 +15,43 @@
  */
 package com.alibaba.nacos.config.server.service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.alibaba.nacos.api.config.PropertyChangeType;
 import com.alibaba.nacos.config.server.model.SampleResult;
 import com.alibaba.nacos.config.server.monitor.MetricsMonitor;
+import com.alibaba.nacos.config.server.remoting.ConfigPushService;
 import com.alibaba.nacos.config.server.utils.GroupKey;
+import com.alibaba.nacos.config.server.utils.GroupKey2;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.MD5Util;
 import com.alibaba.nacos.config.server.utils.RequestUtil;
 import com.alibaba.nacos.config.server.utils.event.EventDispatcher.AbstractEventListener;
 import com.alibaba.nacos.config.server.utils.event.EventDispatcher.Event;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.*;
-import java.util.concurrent.*;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import static com.alibaba.nacos.config.server.utils.LogUtil.memoryLog;
 import static com.alibaba.nacos.config.server.utils.LogUtil.pullLog;
@@ -50,6 +71,9 @@ public class LongPollingService extends AbstractEventListener {
     private static final int SAMPLE_TIMES = 3;
 
     private static final String TRUE_STR = "true";
+
+    @Autowired
+    private ConfigPushService  configPushService;
 
     private Map<String, Long> retainIps = new ConcurrentHashMap<String, Long>();
 
@@ -291,6 +315,7 @@ public class LongPollingService extends AbstractEventListener {
 
     final ScheduledExecutorService scheduler;
 
+
     /**
      * 长轮询订阅关系
      */
@@ -325,7 +350,15 @@ public class LongPollingService extends AbstractEventListener {
                             "polling",
                             clientSub.clientMd5Map.size(), clientSub.probeRequestSize, groupKey);
                         clientSub.sendResponse(Arrays.asList(groupKey));
+
                     }
+
+                    /**
+                     * add grpc connect notify add by zunfei.lzf
+                     */
+                    String[] strings = GroupKey2.parseKey(groupKey);
+                    configPushService.notifyConfigChange(strings[0],strings[1]);
+
                 }
             } catch (Throwable t) {
                 LogUtil.defaultLog.error("data change error:" + t.getMessage(), t.getCause());

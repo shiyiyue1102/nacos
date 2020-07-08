@@ -1,5 +1,9 @@
 package com.alibaba.nacos.api.naming;
 
+/**
+ * @author liuzunfei
+ * @version $Id: ConfigGrpcClient.java, v 0.1 2020年07月08日 4:15 PM liuzunfei Exp $
+ */
 public class SubscribeInfo {
 
     protected String type = NamingSuscribeType.NONE.name();

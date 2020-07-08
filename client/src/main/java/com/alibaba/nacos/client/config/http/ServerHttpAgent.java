@@ -478,4 +478,14 @@ public class ServerHttpAgent implements HttpAgent {
     private volatile STSCredential sTSCredential;
     final ServerListManager serverListMgr;
 
+
+
+    public ServerListManager getServerListManager(){
+        return this.serverListMgr;
+    }
+
+    public SecurityProxy getSecurityProxy(){
+       return  this.securityProxy;
+    }
+
 }
