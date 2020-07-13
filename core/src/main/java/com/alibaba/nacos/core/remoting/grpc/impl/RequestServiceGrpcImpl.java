@@ -35,7 +35,7 @@ public class RequestServiceGrpcImpl extends GrpcServiceGrpc.GrpcServiceImplBase 
         try {
 
             if (Loggers.GRPC.isDebugEnabled()) {
-                Loggers.GRPC.debug("[REQUEST] receive request: {}", request);
+                Loggers.GRPC.debug("[REQUEST] receive request: {},requestValue {}", request,request.getParamsMap());
             }
 
             if ("sendBeat".equals(request.getAction())) {

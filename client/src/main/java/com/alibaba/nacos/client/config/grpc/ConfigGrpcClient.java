@@ -5,10 +5,13 @@
 package com.alibaba.nacos.client.config.grpc;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -16,6 +19,7 @@ import com.alibaba.nacos.api.common.ResponseCode;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.client.config.impl.ServerListManager;
 import com.alibaba.nacos.client.connection.grpc.BaseGrpcClient;
+import com.alibaba.nacos.client.naming.utils.CollectionUtils;
 import com.alibaba.nacos.client.naming.utils.NetUtils;
 import com.alibaba.nacos.client.naming.utils.UtilAndComs;
 import com.alibaba.nacos.client.utils.LogUtils;
@@ -43,7 +47,16 @@ public class ConfigGrpcClient extends BaseGrpcClient {
 
     private AbstractStreamMessageHandler abstractStreamMessageHandler;
 
-    private int port = 18849;
+    private int port = 28849;
+
+
+    private ListenContextCallBack  listenContextCallBack;
+
+
+    public void registerListenContextCallBack(ListenContextCallBack  listenContextCallBack){
+        this.listenContextCallBack=listenContextCallBack;
+    }
+
 
     public ConfigGrpcClient(ServerListManager serverListManager){
 
@@ -82,7 +95,10 @@ public class ConfigGrpcClient extends BaseGrpcClient {
 
     private void buildClient() {
 
-        this.channel = ManagedChannelBuilder.forAddress(nextServer(), this.port)
+        String server =nextServer();
+        LOGGER.info("[GRPC ]init config listen stream.......,server list:"+server );
+
+        this.channel = ManagedChannelBuilder.forAddress(server, port)
             .usePlaintext(true)
             .build();
 
@@ -104,8 +120,28 @@ public class ConfigGrpcClient extends BaseGrpcClient {
         LOGGER.info("[GRPC ]init config listen stream......." );
 
         grpcStreamServiceStub.streamRequest(request, new ConfigStreamServer());
+
+        relistenKeyIfNecessary();
     }
 
+    void  relistenKeyIfNecessary(){
+        if (listenContextCallBack!=null&& !CollectionUtils.isEmpty(listenContextCallBack.getAllListenContext())){
+
+            System.out.println("[GRPC ]init listen context ......");
+            LOGGER.info("[GRPC ]init listen context ......" );
+            listenContextCallBack.getAllListenContext().forEach(new Consumer<ListenContext>() {
+                @Override
+                public void accept(ListenContext listenContext) {
+                    try {
+                        addListener(listenContext.dataId,listenContext.group);
+                    } catch (NacosException e) {
+                        LOGGER.info("[GRPC ]fail to relisten......." );
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+    }
 
 
     public void removeListener(String dataId, String group) throws NacosException {
@@ -147,6 +183,24 @@ public class ConfigGrpcClient extends BaseGrpcClient {
     }
 
 
+    public GrpcResponse  getConfig(String dataId, String group) throws NacosException {
+        GrpcRequest request = GrpcRequest.newBuilder()
+            .setModule("config")
+            .setClientId(connectionId)
+            .setRequestId(buildRequestId(connectionId))
+            .setSource(NetUtils.localIP())
+            .setAction("GET_CONFIG")
+            .setAgent(UtilAndComs.VERSION)
+            .putParams("group", group)
+            .putParams("dataId", dataId)
+            .build();
+        return grpcServiceBlockingStub.request(request);
+
+    }
+
+
+
+
     private String getMessage(GrpcResponse response) {
         String message;
         try {
@@ -176,13 +230,13 @@ public class ConfigGrpcClient extends BaseGrpcClient {
 
         @Override
         public void onError(Throwable t) {
-            LOGGER.error("[GRPC] error", t);
+            LOGGER.error("[GRPC] config error", t);
             rebuildClient();
         }
 
         @Override
         public void onCompleted() {
-            LOGGER.info("[GRPC] connection closed.");
+            LOGGER.info("[GRPC] config connection closed.");
             rebuildClient();
         }
     }
@@ -192,9 +246,13 @@ public class ConfigGrpcClient extends BaseGrpcClient {
     private String nextServer() {
         serverListManager.refreshCurrentServerAddr();
         String server = serverListManager.getCurrentServerAddr();
-        if (server.contains(":")) {
+        if (server.contains("http")) {
+            server = server.split(":")[1].replaceAll("//","");
+        }else{
             server = server.split(":")[0];
         }
         return server;
     }
 }
+
+

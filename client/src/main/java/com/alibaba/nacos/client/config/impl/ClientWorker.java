@@ -27,15 +27,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.common.Constants;
+import com.alibaba.nacos.api.common.ResponseCode;
 import com.alibaba.nacos.api.config.ConfigType;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
@@ -43,19 +48,24 @@ import com.alibaba.nacos.client.config.common.GroupKey;
 import com.alibaba.nacos.client.config.filter.impl.ConfigFilterChainManager;
 import com.alibaba.nacos.client.config.grpc.AbstractStreamMessageHandler;
 import com.alibaba.nacos.client.config.grpc.ConfigGrpcClient;
+import com.alibaba.nacos.client.config.grpc.ListenContext;
+import com.alibaba.nacos.client.config.grpc.ListenContextCallBack;
 import com.alibaba.nacos.client.config.http.HttpAgent;
-import com.alibaba.nacos.client.config.http.ServerHttpAgent;
 import com.alibaba.nacos.client.config.impl.HttpSimpleClient.HttpResult;
 import com.alibaba.nacos.client.config.utils.ContentUtils;
 import com.alibaba.nacos.client.config.utils.MD5;
 import com.alibaba.nacos.client.monitor.MetricsMonitor;
+import com.alibaba.nacos.client.naming.utils.CollectionUtils;
 import com.alibaba.nacos.client.utils.LogUtils;
 import com.alibaba.nacos.client.utils.ParamUtil;
 import com.alibaba.nacos.client.utils.TenantUtil;
+import com.alibaba.nacos.common.grpc.GrpcMetadata;
+import com.alibaba.nacos.common.grpc.GrpcResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
+import sun.management.resources.agent;
 
 import static com.alibaba.nacos.api.common.Constants.CONFIG_TYPE;
 import static com.alibaba.nacos.api.common.Constants.LINE_SEPARATOR;
@@ -88,6 +98,7 @@ public class ClientWorker {
             }
         }
         try {
+
             configGrpcClient.removeListener(dataId,group);
         } catch (NacosException e) {
             e.printStackTrace();
@@ -246,56 +257,104 @@ public class ClientWorker {
             group = Constants.DEFAULT_GROUP;
         }
 
-        HttpResult result = null;
-        try {
-            List<String> params = null;
-            if (StringUtils.isBlank(tenant)) {
-                params = new ArrayList<String>(Arrays.asList("dataId", dataId, "group", group));
-            } else {
-                params = new ArrayList<String>(Arrays.asList("dataId", dataId, "group", group, "tenant", tenant));
-            }
-            result = agent.httpGet(Constants.CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), readTimeout);
-        } catch (IOException e) {
-            String message = String.format(
-                "[%s] [sub-server] get server config exception, dataId=%s, group=%s, tenant=%s", agent.getName(),
-                dataId, group, tenant);
-            LOGGER.error(message, e);
-            throw new NacosException(NacosException.SERVER_ERROR, e);
-        }
+        return getServiceConfigLCInner( dataId, group, tenant, readTimeout);
+        //HttpResult result = null;
+        //try {
+        //    List<String> params = null;
+        //    if (StringUtils.isBlank(tenant)) {
+        //        params = new ArrayList<String>(Arrays.asList("dataId", dataId, "group", group));
+        //    } else {
+        //        params = new ArrayList<String>(Arrays.asList("dataId", dataId, "group", group, "tenant", tenant));
+        //    }
+        //    result = agent.httpGet(Constants.CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), readTimeout);
+        //} catch (IOException e) {
+        //    String message = String.format(
+        //        "[%s] [sub-server] get server config exception, dataId=%s, group=%s, tenant=%s", agent.getName(),
+        //        dataId, group, tenant);
+        //    LOGGER.error(message, e);
+        //    throw new NacosException(NacosException.SERVER_ERROR, e);
+        //}
 
-        switch (result.code) {
-            case HttpURLConnection.HTTP_OK:
-                LocalConfigInfoProcessor.saveSnapshot(agent.getName(), dataId, group, tenant, result.content);
-                ct[0] = result.content;
-                if (result.headers.containsKey(CONFIG_TYPE)) {
-                    ct[1] = result.headers.get(CONFIG_TYPE).get(0);
-                } else {
-                    ct[1] = ConfigType.TEXT.getType();
+
+
+        //switch (result.code) {
+        //    case HttpURLConnection.HTTP_OK:
+        //        LocalConfigInfoProcessor.saveSnapshot(agent.getName(), dataId, group, tenant, result.content);
+        //        ct[0] = result.content;
+        //        if (result.headers.containsKey(CONFIG_TYPE)) {
+        //            ct[1] = result.headers.get(CONFIG_TYPE).get(0);
+        //        } else {
+        //            ct[1] = ConfigType.TEXT.getType();
+        //        }
+        //        return ct;
+        //    case HttpURLConnection.HTTP_NOT_FOUND:
+        //        LocalConfigInfoProcessor.saveSnapshot(agent.getName(), dataId, group, tenant, null);
+        //        return ct;
+        //    case HttpURLConnection.HTTP_CONFLICT: {
+        //        LOGGER.error(
+        //            "[{}] [sub-server-error] get server config being modified concurrently, dataId={}, group={}, "
+        //                + "tenant={}", agent.getName(), dataId, group, tenant);
+        //        throw new NacosException(NacosException.CONFLICT,
+        //            "data being modified, dataId=" + dataId + ",group=" + group + ",tenant=" + tenant);
+        //    }
+        //    case HttpURLConnection.HTTP_FORBIDDEN: {
+        //        LOGGER.error("[{}] [sub-server-error] no right, dataId={}, group={}, tenant={}", agent.getName(), dataId,
+        //            group, tenant);
+        //        throw new NacosException(result.code, result.content);
+        //    }
+        //    default: {
+        //        LOGGER.error("[{}] [sub-server-error]  dataId={}, group={}, tenant={}, code={}", agent.getName(), dataId,
+        //            group, tenant, result.code);
+        //        throw new NacosException(result.code,
+        //            "http error, code=" + result.code + ",dataId=" + dataId + ",group=" + group + ",tenant=" + tenant);
+        //    }
+        //}
+    }
+
+
+    private String[]  getServiceConfigLCInner(final String dataId,  String group, String tenant, long readTimeout)
+        throws  NacosException {
+        if (StringUtils.isBlank(group)) {
+            group = Constants.DEFAULT_GROUP;
+        }
+        final String groupInner=group;
+
+        try{
+
+
+            GrpcResponse grpcResponse =  configGrpcClient.getConfig(dataId, groupInner);
+            if (grpcResponse.getCode()== ResponseCode.OK) {
+
+                String[] ct=new String[2];
+                if(grpcResponse.getMessage()==null) {
+                    LocalConfigInfoProcessor.saveSnapshot(agent.getName(), dataId, group, tenant, null);
+                    return ct;
+                }else {
+                    String content = grpcResponse.getMessage().getValue().toStringUtf8();
+                    LocalConfigInfoProcessor.saveSnapshot(agent.getName(), dataId, group, tenant, content);
+                    ct[0] = content;
+                    GrpcMetadata metadata = grpcResponse.getMetadata();
+                    if(metadata!=null&&metadata.getLabelsMap().containsKey(CONFIG_TYPE)) {
+                        ct[1] = metadata.getLabelsMap().get(CONFIG_TYPE);
+                    } else {
+                        ct[1] = ConfigType.TEXT.getType();
+                    }
+                    return ct;
                 }
-                return ct;
-            case HttpURLConnection.HTTP_NOT_FOUND:
-                LocalConfigInfoProcessor.saveSnapshot(agent.getName(), dataId, group, tenant, null);
-                return ct;
-            case HttpURLConnection.HTTP_CONFLICT: {
-                LOGGER.error(
-                    "[{}] [sub-server-error] get server config being modified concurrently, dataId={}, group={}, "
-                        + "tenant={}", agent.getName(), dataId, group, tenant);
-                throw new NacosException(NacosException.CONFLICT,
-                    "data being modified, dataId=" + dataId + ",group=" + group + ",tenant=" + tenant);
-            }
-            case HttpURLConnection.HTTP_FORBIDDEN: {
+
+            }else{
                 LOGGER.error("[{}] [sub-server-error] no right, dataId={}, group={}, tenant={}", agent.getName(), dataId,
-                    group, tenant);
-                throw new NacosException(result.code, result.content);
+                               group, tenant);
+                throw new NacosException(grpcResponse.getCode(), "");
             }
-            default: {
-                LOGGER.error("[{}] [sub-server-error]  dataId={}, group={}, tenant={}, code={}", agent.getName(), dataId,
-                    group, tenant, result.code);
-                throw new NacosException(result.code,
-                    "http error, code=" + result.code + ",dataId=" + dataId + ",group=" + group + ",tenant=" + tenant);
-            }
+
+        }catch(NacosException ne){
+            throw ne;
+        }catch(Exception e){
+            throw new NacosException(500, e);
         }
     }
+
 
     private void checkLocalConfig(CacheData cacheData) {
         final String dataId = cacheData.dataId;
@@ -473,10 +532,7 @@ public class ClientWorker {
         // Initialize the timeout parameter
 
         init(properties);
-
-        if (agent instanceof ServerHttpAgent){
-            ServerHttpAgent serverHttpAgent=(ServerHttpAgent)agent;
-            configGrpcClient=new ConfigGrpcClient(serverHttpAgent.getServerListManager());
+            configGrpcClient=new ConfigGrpcClient(agent.getServerListManger());
 
             configGrpcClient.initResponseHandler(new AbstractStreamMessageHandler() {
                 @Override
@@ -505,9 +561,24 @@ public class ClientWorker {
                 }
             });
 
-        }
+        configGrpcClient.registerListenContextCallBack(new ListenContextCallBack() {
+            @Override
+            public List<ListenContext> getAllListenContext() {
 
+                List<ListenContext> listenContexts =new LinkedList<ListenContext>();
 
+                for(CacheData cacheData:cacheMap.get().values()){
+                    if (!CollectionUtils.isEmpty(cacheData.getListeners())){
+                        ListenContext contextInner=new ListenContext();
+                        contextInner.setDataId(cacheData.dataId);
+                        contextInner.setGroup(cacheData.group);
+                        listenContexts.add(contextInner);
+                    }
+
+                }
+                return listenContexts;
+            }
+        });
 
         executor = Executors.newScheduledThreadPool(1, new ThreadFactory() {
             @Override

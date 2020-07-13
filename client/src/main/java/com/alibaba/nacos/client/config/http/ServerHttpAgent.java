@@ -325,6 +325,11 @@ public class ServerHttpAgent implements HttpAgent {
     }
 
     @Override
+    public ServerListManager getServerListManger() {
+        return this.serverListMgr;
+    }
+
+    @Override
     public synchronized void start() throws NacosException {
         serverListMgr.start();
     }
@@ -479,13 +484,5 @@ public class ServerHttpAgent implements HttpAgent {
     final ServerListManager serverListMgr;
 
 
-
-    public ServerListManager getServerListManager(){
-        return this.serverListMgr;
-    }
-
-    public SecurityProxy getSecurityProxy(){
-       return  this.securityProxy;
-    }
 
 }

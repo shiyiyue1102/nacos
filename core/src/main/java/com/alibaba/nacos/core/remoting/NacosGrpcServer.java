@@ -1,24 +1,26 @@
 package com.alibaba.nacos.core.remoting;
 
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.annotation.PostConstruct;
+
 import com.alibaba.nacos.core.remoting.grpc.impl.RequestGrpcIntercepter;
 import com.alibaba.nacos.core.remoting.grpc.impl.RequestServiceGrpcImpl;
 import com.alibaba.nacos.core.remoting.grpc.impl.StreamGrpcIntercepter;
 import com.alibaba.nacos.core.remoting.grpc.impl.StreamServiceGrpcImpl;
 import com.alibaba.nacos.core.utils.Loggers;
+
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptors;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import java.io.IOException;
-
 
 @Service
 public class NacosGrpcServer {
 
-    private final int port = 18849;
+    private static final int DEFAULT_PORT = 18849;
 
     private Server server;
 
@@ -39,7 +41,15 @@ public class NacosGrpcServer {
 
         Loggers.GRPC.info("Nacos gRPC server starting...");
 
-        server = ServerBuilder.forPort(port)
+        Properties properties = System.getProperties();
+
+        int serverPort=DEFAULT_PORT;
+        String appointedPort=properties.getProperty("gRPCServerPort");
+        if (NumberUtils.isDigits(appointedPort)){
+            serverPort=NumberUtils.toInt(appointedPort);
+        }
+
+        server = ServerBuilder.forPort(serverPort)
             .addService(requestServiceGrpc)
             .addService(streamServiceGrpc)
             .build();

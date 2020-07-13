@@ -28,7 +28,7 @@ public class StreamServiceGrpcImpl extends GrpcStreamServiceGrpc.GrpcStreamServi
     @Override
     public void streamRequest(GrpcRequest request, StreamObserver<GrpcResponse> responseObserver) {
 
-        Loggers.GRPC.info("new connection {0},detail={1}", request.getClientId(),request.getMetadata());
+        Loggers.GRPC.info("new stream request receive {},detail={}", request.getClientId(),request.getMetadata());
         grpcClients.put(request.getClientId(), responseObserver);
         connectionManager.putIfAbsent(new Connection(request.getClientId(), ConnectionType.GRPC));
         connectionManager.listen(request.getClientId(), new GrpcConnectionEventListener());
@@ -36,8 +36,6 @@ public class StreamServiceGrpcImpl extends GrpcStreamServiceGrpc.GrpcStreamServi
 
     @Override
     public void push(String clientId, String dataId, byte[] data) {
-
-        Loggers.GRPC.info("[PUSH] push now client:{}, dataId:{}", clientId, dataId);
 
         if (!grpcClients.containsKey(clientId)) {
             Loggers.GRPC.warn("[PUSH] grpc client not found: {}", clientId);
@@ -49,7 +47,6 @@ public class StreamServiceGrpcImpl extends GrpcStreamServiceGrpc.GrpcStreamServi
             setMetadata(metadata).
             setMessage(Any.newBuilder().setValue(ByteString.copyFrom(data))).
             build();
-
         grpcClients.get(clientId).onNext(response);
     }
 

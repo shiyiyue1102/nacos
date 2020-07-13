@@ -327,6 +327,7 @@ public class LongPollingService extends AbstractEventListener {
         @Override
         public void run() {
             try {
+
                 ConfigService.getContentBetaMd5(groupKey);
                 for (Iterator<ClientLongPolling> iter = allSubs.iterator(); iter.hasNext(); ) {
                     ClientLongPolling clientSub = iter.next();
@@ -353,13 +354,14 @@ public class LongPollingService extends AbstractEventListener {
 
                     }
 
-                    /**
-                     * add grpc connect notify add by zunfei.lzf
-                     */
-                    String[] strings = GroupKey2.parseKey(groupKey);
-                    configPushService.notifyConfigChange(strings[0],strings[1]);
-
                 }
+
+                /**
+                 * add grpc connect notify add by zunfei.lzf
+                 */
+                String[] strings = GroupKey2.parseKey(groupKey);
+                configPushService.notifyConfigChange(strings[0],strings[1]);
+
             } catch (Throwable t) {
                 LogUtil.defaultLog.error("data change error:" + t.getMessage(), t.getCause());
             }

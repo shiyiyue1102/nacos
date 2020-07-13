@@ -15,11 +15,12 @@
  */
 package com.alibaba.nacos.client.config.http;
 
-import com.alibaba.nacos.api.exception.NacosException;
-import com.alibaba.nacos.client.config.impl.HttpSimpleClient.HttpResult;
-
 import java.io.IOException;
 import java.util.List;
+
+import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.client.config.impl.HttpSimpleClient.HttpResult;
+import com.alibaba.nacos.client.config.impl.ServerListManager;
 
 
 /**
@@ -28,6 +29,13 @@ import java.util.List;
  * @author Nacos
  */
 public interface HttpAgent {
+
+    /**
+     *  return inner ServerListManager
+     * @return
+     */
+     ServerListManager getServerListManger();
+
     /**
      * start to get nacos ip list
      * @return Nothing.
