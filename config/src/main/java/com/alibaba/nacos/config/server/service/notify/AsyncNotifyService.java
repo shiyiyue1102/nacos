@@ -294,8 +294,7 @@ public class AsyncNotifyService {
                 asyncTaskExecute(task);
                 
                 LogUtil.NOTIFY_LOG
-                        .error("[notify-retry] target:{} dataId:{} group:{} ts:{}", task.target, task.getDataId(),
-                                task.getGroup(), task.getLastModified());
+                        .error("[notify-retry] target:{} dataId:{} group:{} ts:{}", task.target, task.getDataId(), task.getGroup(), task.getLastModified());
                 
                 MetricsMonitor.getConfigNotifyException().increment();
             }
