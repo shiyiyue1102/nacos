@@ -80,17 +80,14 @@ public class ConnectionManager {
      * @param connectionId connectionId
      * @param connection   connection
      */
-    public synchronized void register(String connectionId, Connection connection) {
-        if (connection.isConnected()) {
-            Connection connectionInner = connetions.put(connectionId, connection);
-            if (connectionInner == null) {
-                clientConnectionEventListenerRegistry.notifyClientConnected(connection);
-                Loggers.REMOTE
-                        .info("new connection registered successfully, connectionid = {},connection={} ", connectionId,
-                                connection);
-            }
+    public void register(String connectionId, Connection connection) {
+        Connection connectionInner = connetions.put(connectionId, connection);
+        if (connectionInner == null) {
+            clientConnectionEventListenerRegistry.notifyClientConnected(connection);
+            Loggers.REMOTE
+                    .info("new connection registered successfully, connectionid = {},connection={} ", connectionId,
+                            connection);
         }
-        
     }
     
     /**
@@ -98,7 +95,7 @@ public class ConnectionManager {
      *
      * @param connectionId connectionId.
      */
-    public synchronized void unregister(String connectionId) {
+    public void unregister(String connectionId) {
         Connection remove = this.connetions.remove(connectionId);
         if (remove != null) {
             remove.close();
@@ -167,9 +164,12 @@ public class ConnectionManager {
             @Override
             public void run() {
                 try {
-                    
+    
+                    Loggers.REMOTE.info("rpc ack size :{}", RpcAckCallbackSynchronizer.CALLBACK_CONTEXT.size());
+                    ;
+    
                     MetricsMonitor.getLongConnectionMonitor().set(connetions.size());
-                    
+    
                     long currentStamp = System.currentTimeMillis();
                     Set<Map.Entry<String, Connection>> entries = connetions.entrySet();
                     boolean isLoaderClient = loadClient >= 0;
@@ -183,19 +183,19 @@ public class ConnectionManager {
                             expelCount--;
                         }
                     }
-                    
-                    ConnectResetRequest connectResetRequest = new ConnectResetRequest();
-                    if (StringUtils.isNotBlank(redirectAddress) && redirectAddress.contains(Constants.COLON)) {
-                        String[] split = redirectAddress.split(Constants.COLON);
-                        connectResetRequest.setServerIp(split[0]);
-                        connectResetRequest.setServerPort(split[1]);
-                    }
-                    
+    
                     for (String expeledClientId : expelClient) {
                         try {
                             Connection connection = getConnection(expeledClientId);
                             if (connection != null) {
-                                connection.asyncRequest(connectResetRequest, buildMeta(), null);
+    
+                                ConnectResetRequest connectResetRequest = new ConnectResetRequest();
+                                if (StringUtils.isNotBlank(redirectAddress) && redirectAddress.contains(":")) {
+                                    String[] split = redirectAddress.split(Constants.COLON);
+                                    connectResetRequest.setServerIp(split[0]);
+                                    connectResetRequest.setServerPort(split[1]);
+                                }
+                                connection.request(connectResetRequest, buildMeta());
                                 Loggers.REMOTE
                                         .info("expel connection ,send switch server response connectionid = {},connectResetRequest={} ",
                                                 expeledClientId, connectResetRequest);
@@ -214,7 +214,7 @@ public class ConnectionManager {
                         redirectAddress = null;
                     }
                     
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     Loggers.REMOTE.error("error occurs when heathy check... ", e);
                 }
             }

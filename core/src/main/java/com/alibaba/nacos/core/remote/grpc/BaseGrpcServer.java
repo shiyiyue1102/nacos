@@ -17,7 +17,6 @@
 package com.alibaba.nacos.core.remote.grpc;
 
 import com.alibaba.nacos.api.grpc.auto.Payload;
-import com.alibaba.nacos.common.executor.ExecutorFactory;
 import com.alibaba.nacos.common.remote.ConnectionType;
 import com.alibaba.nacos.common.utils.ReflectUtils;
 import com.alibaba.nacos.common.utils.UuidUtils;
@@ -25,7 +24,6 @@ import com.alibaba.nacos.core.remote.BaseRpcServer;
 import com.alibaba.nacos.core.remote.ConnectionManager;
 import com.alibaba.nacos.core.remote.RequestHandlerRegistry;
 import com.alibaba.nacos.core.utils.Loggers;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.grpc.Attributes;
 import io.grpc.Context;
 import io.grpc.Contexts;
@@ -33,7 +31,6 @@ import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
@@ -41,6 +38,7 @@ import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
 import io.grpc.ServerTransportFilter;
 import io.grpc.internal.ServerStream;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.channel.Channel;
 import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ServerCalls;
@@ -48,7 +46,6 @@ import io.grpc.util.MutableHandlerRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.Executor;
 
 /**
  * Grpc implementation as  a rpc server.
@@ -57,8 +54,6 @@ import java.util.concurrent.Executor;
  * @version $Id: BaseGrpcServer.java, v 0.1 2020年07月13日 3:42 PM liuzunfei Exp $
  */
 public abstract class BaseGrpcServer extends BaseRpcServer {
-    
-    private static Executor grpcExecutor;
     
     private Server server;
     
@@ -111,12 +106,8 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
     
         addServices(handlerRegistry, serverInterceptor);
     
-        grpcExecutor = ExecutorFactory.Managed
-                .newCustomerThreadExecutor("core", Runtime.getRuntime().availableProcessors(),
-                        Runtime.getRuntime().availableProcessors() * 4, 10000,
-                        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("nacos-grpc-executor-%d").build());
-        server = ServerBuilder.forPort(getServicePort()).executor(grpcExecutor)
-                .fallbackHandlerRegistry(handlerRegistry).addTransportFilter(new ServerTransportFilter() {
+        server = NettyServerBuilder.forPort(getServicePort()).fallbackHandlerRegistry(handlerRegistry)
+                .addTransportFilter(new ServerTransportFilter() {
                     @Override
                     public Attributes transportReady(Attributes transportAttrs) {
                         InetSocketAddress remoteAddress = (InetSocketAddress) transportAttrs
@@ -129,17 +120,17 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
                         Attributes attrWraper = transportAttrs.toBuilder()
                                 .set(TRANS_KEY_CONN_ID, UuidUtils.generateUuid()).set(TRANS_KEY_CLIENT_IP, remoteIp)
                                 .set(TRANS_KEY_CLIENT_PORT, remotePort).set(TRANS_KEY_LOCAL_PORT, localPort).build();
-                        String connectionId = attrWraper.get(TRANS_KEY_CONN_ID);
-                        Loggers.REMOTE.info(" connection transportReady,connectionId = {} ", connectionId);
+                        String connectionid = attrWraper.get(TRANS_KEY_CONN_ID);
+                        Loggers.REMOTE.info(" connection transportReady,connectionid = {} ", connectionid);
                         return attrWraper;
     
                     }
-                
+    
                     @Override
                     public void transportTerminated(Attributes transportAttrs) {
-                        String connectionId = transportAttrs.get(TRANS_KEY_CONN_ID);
-                        Loggers.REMOTE.info(" connection transportTerminated,connectionId = {} ", connectionId);
-                        connectionManager.unregister(connectionId);
+                        String connectionid = transportAttrs.get(TRANS_KEY_CONN_ID);
+                        Loggers.REMOTE.info(" connection transportTerminated,connectionid = {} ", connectionid);
+                        connectionManager.unregister(connectionid);
                     }
                 }).build();
         server.start();
