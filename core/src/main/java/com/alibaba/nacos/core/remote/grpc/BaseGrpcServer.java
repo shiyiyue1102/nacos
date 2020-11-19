@@ -41,6 +41,7 @@ import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
 import io.grpc.ServerTransportFilter;
 import io.grpc.internal.ServerStream;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.channel.Channel;
 import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ServerCalls;

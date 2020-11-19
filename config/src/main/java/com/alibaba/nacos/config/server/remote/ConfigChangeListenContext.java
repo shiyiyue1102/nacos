@@ -19,10 +19,8 @@ package com.alibaba.nacos.config.server.remote;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,27 +35,28 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConfigChangeListenContext {
     
     /**
-     * groupKey-> connection set.
+     * groupKey-> connnection set.
      */
-    private ConcurrentHashMap<String, HashSet<String>> groupKeyContext = new ConcurrentHashMap<String, HashSet<String>>();
+    private Map<String, Set<String>> groupKeyContext = new ConcurrentHashMap<String, Set<String>>();
     
     /**
-     * connectionId-> group key set.
+     * connectionId-> groupkey set.
      */
-    private ConcurrentHashMap<String, HashMap<String, String>> connectionIdContext = new ConcurrentHashMap<String, HashMap<String, String>>();
+    private Map<String, HashMap<String, String>> connectionIdContext = new ConcurrentHashMap<String, HashMap<String, String>>();
     
     /**
-     * add listen.
+     * add listen .
      *
-     * @param groupKey     groupKey.
+     * @param listenKey    listenKey.
      * @param connectionId connectionId.
      */
-    public synchronized void addListen(String groupKey, String md5, String connectionId) {
+    public void addListen(String listenKey, String md5, String connectionId) {
+        
         // 1.add groupKeyContext
-        Set<String> listenClients = groupKeyContext.get(groupKey);
+        Set<String> listenClients = groupKeyContext.get(listenKey);
         if (listenClients == null) {
-            groupKeyContext.putIfAbsent(groupKey, new HashSet<String>());
-            listenClients = groupKeyContext.get(groupKey);
+            groupKeyContext.putIfAbsent(listenKey, new HashSet<String>());
+            listenClients = groupKeyContext.get(listenKey);
         }
         listenClients.add(connectionId);
         
@@ -67,109 +66,81 @@ public class ConfigChangeListenContext {
             connectionIdContext.putIfAbsent(connectionId, new HashMap<String, String>(16));
             groupKeys = connectionIdContext.get(connectionId);
         }
-        groupKeys.put(groupKey, md5);
+        groupKeys.put(listenKey, md5);
         
     }
     
     /**
      * remove listen context for connection id .
      *
-     * @param groupKey     groupKey.
+     * @param listenKey    listenKey.
      * @param connectionId connection id.
      */
-    public synchronized void removeListen(String groupKey, String connectionId) {
+    public void removeListen(String listenKey, String connectionId) {
         
         //1. remove groupKeyContext
-        Set<String> connectionIds = groupKeyContext.get(groupKey);
+        Set<String> connectionIds = groupKeyContext.get(listenKey);
         if (connectionIds != null) {
             connectionIds.remove(connectionId);
             if (connectionIds.isEmpty()) {
-                groupKeyContext.remove(groupKey);
+                groupKeyContext.remove(listenKey);
             }
         }
         
         //2.remove connectionIdContext
         HashMap<String, String> groupKeys = connectionIdContext.get(connectionId);
         if (groupKeys != null) {
-            groupKeys.remove(groupKey);
+            groupKeys.remove(listenKey);
         }
     }
     
-    /**
-     * get listeners of the group key.
-     *
-     * @param groupKey groupKey.
-     * @return the copy of listeners, may be return null.
-     */
-    public synchronized Set<String> getListeners(String groupKey) {
-        
-        HashSet<String> strings = groupKeyContext.get(groupKey);
-        if (CollectionUtils.isNotEmpty(strings)) {
-            Set<String> listenConnections = new HashSet<String>();
-            safeCopy(strings, listenConnections);
-            return listenConnections;
-        }
-        return null;
+    public Set<String> getListeners(String listenKey) {
+        return groupKeyContext.get(listenKey);
     }
     
     /**
-     * copy collections.
-     *
-     * @param src  may be modified concurrently
-     * @param dest dest collection
-     */
-    private void safeCopy(Collection src, Collection dest) {
-        Iterator iterator = src.iterator();
-        while (iterator.hasNext()) {
-            dest.add(iterator.next());
-        }
-    }
-    
-    /**
-     * remove the context related to the connection id.
+     * remove the context related to the connectionid.
      *
      * @param connectionId connectionId.
      */
-    public synchronized void clearContextForConnectionId(final String connectionId) {
-        
+    public void clearContextForConnectionId(final String connectionId) {
+    
         Map<String, String> listenKeys = getListenKeys(connectionId);
-        
+    
         if (listenKeys != null) {
             for (Map.Entry<String, String> groupKey : listenKeys.entrySet()) {
-                
-                Set<String> connectionIds = groupKeyContext.get(groupKey.getKey());
-                if (CollectionUtils.isNotEmpty(connectionIds)) {
-                    connectionIds.remove(connectionId);
+            
+                Set<String> connetionIds = groupKeyContext.get(groupKey.getKey());
+                if (CollectionUtils.isNotEmpty(connetionIds)) {
+                    connetionIds.remove(connectionId);
                 } else {
                     groupKeyContext.remove(groupKey.getKey());
                 }
-                
+            
             }
         }
-        
+    
         connectionIdContext.remove(connectionId);
     }
     
     /**
-     * get listen keys.
+     * get listenkeys.
      *
-     * @param connectionId connection id.
-     * @return listen group keys of the connection id, key:group key,value:md5
+     * @param connectionId connetionid.
+     * @return
      */
-    public synchronized Map<String, String> getListenKeys(String connectionId) {
-        Map<String, String> copy = new HashMap<String, String>(connectionIdContext.get(connectionId));
-        return copy;
+    public Map<String, String> getListenKeys(String connectionId) {
+        return connectionIdContext.get(connectionId);
     }
     
     /**
-     * get md5.
+     * get listenkey.
      *
-     * @param connectionId connection id.
-     * @return md5 of the listen group key.
+     * @param connectionId connetionid.
+     * @return
      */
     public String getListenKeyMd5(String connectionId, String groupKey) {
         Map<String, String> groupKeyContexts = connectionIdContext.get(connectionId);
         return groupKeyContexts == null ? null : groupKeyContexts.get(groupKey);
     }
-    
 }
