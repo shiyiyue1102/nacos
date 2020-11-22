@@ -187,11 +187,10 @@ public class ConfigTest {
     
     @Test
     public void test2() throws Exception {
-        final String dataId = "xiaochun.xxc";
+        final String dataId = "xiaochun.xxc你好";
         final String group = "xiaochun.xxc";
-        Random random = new Random();
         Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "11.160.144.149:8848,11.160.144.148:8848");
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, "11.160.144.149:8848");
         //"
         List<ConfigService> configServiceList = new ArrayList<ConfigService>();
         for (int i = 0; i < 500; i++) {
@@ -206,9 +205,8 @@ public class ConfigTest {
                     
                 }
             };
-            for (int j = 0; j < 50; j++) {
-                configService.addListener(dataId + random.nextInt(200), group, listener);
-            }
+            
+            configService.addListener(dataId, group, listener);
             configServiceList.add(configService);
             System.out.println(configServiceList.size());
         }
@@ -263,7 +261,7 @@ public class ConfigTest {
                     try {
                         String content1 = new String(new byte[5000]) + "__" + System.currentTimeMillis();
                         System.out.println(content1.length());
-                        boolean b = configService.publishConfig(dataId + random.nextInt(400), group, content1);
+                        boolean b = configService.publishConfig(dataId + random.nextInt(2000), group, content1);
                         times--;
                         System.out.println("发布配置：" + b);
                         
@@ -282,7 +280,7 @@ public class ConfigTest {
         
         for (int i = 0; i < 500; i++) {
             String content1 = System.currentTimeMillis() + "";
-            configService.getConfigAndSignListener(dataId + i, group, 3000L, listener);
+            configService.addListener(dataId + i, group, listener);
         }
         
         Thread.sleep(1000000L);
