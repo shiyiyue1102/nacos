@@ -99,7 +99,12 @@ public class GrpcConnection extends Connection {
         sendRequestNoAck(request, meta);
         
         DefaultRequestFuture defaultPushFuture = new DefaultRequestFuture(getMetaInfo().getConnectionId(), requestId,
-                callBack, () -> RpcAckCallbackSynchronizer.clearFuture(getMetaInfo().getConnectionId(), requestId));
+                callBack, new DefaultRequestFuture.TimeoutInnerTrigger() {
+                    @Override
+                    public void triggerOnTimeout() {
+                        RpcAckCallbackSynchronizer.clearFuture(getMetaInfo().getConnectionId(), requestId);
+                    }
+                });
         
         RpcAckCallbackSynchronizer.syncCallback(getMetaInfo().getConnectionId(), requestId, defaultPushFuture);
         return defaultPushFuture;
