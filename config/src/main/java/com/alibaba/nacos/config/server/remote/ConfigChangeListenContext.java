@@ -157,8 +157,8 @@ public class ConfigChangeListenContext {
      * @return listen group keys of the connection id, key:group key,value:md5
      */
     public synchronized Map<String, String> getListenKeys(String connectionId) {
-        HashMap<String, String> listenContext = connectionIdContext.get(connectionId);
-        return listenContext == null ? null : new HashMap<String, String>(listenContext);
+        Map<String, String> copy = new HashMap<String, String>(connectionIdContext.get(connectionId));
+        return copy;
     }
     
     /**
