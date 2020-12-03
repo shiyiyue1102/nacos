@@ -62,8 +62,8 @@ public class ConfigTest {
         //properties.setProperty(PropertyKeyConst.SERVER_ADDR, "11.160.144.149:8848,11.160.144.148:8848,127.0.0.1:8848");
         //"11.239.114.187:8848,,11.239.113.204:8848,11.239.112.161:8848");
         //"11.239.114.187:8848");
-        //properties.setProperty(PropertyKeyConst.USERNAME, "nacos");
-        //properties.setProperty(PropertyKeyConst.PASSWORD, "nacos");
+        properties.setProperty(PropertyKeyConst.USERNAME, "yiyan");
+        properties.setProperty(PropertyKeyConst.PASSWORD, "yiyan");
         
         configService = NacosFactory.createConfigService(properties);
         //Thread.sleep(2000L);
@@ -263,9 +263,12 @@ public class ConfigTest {
                     try {
                         String content1 = new String(new byte[5000]) + "__" + System.currentTimeMillis();
                         System.out.println(content1.length());
-                        boolean b = configService.publishConfig(dataId + random.nextInt(400), group, content1);
+                        long start0=System.currentTimeMillis();
+                        boolean b = configService.publishConfig(dataId + random.nextInt(200), group, content1);
                         times--;
-                        System.out.println("发布配置：" + b);
+                        long end0=System.currentTimeMillis();
+    
+                        System.out.println("发布配置：" + b+","+(end0-start0));
                         
                         Thread.sleep(500L);
                     } catch (Exception e) {

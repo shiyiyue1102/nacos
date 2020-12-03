@@ -37,7 +37,7 @@ public abstract class Connection implements Requester {
     /**
      * check is connected.
      *
-     * @return
+     * @return if connection or not,check the inner connection is active.
      */
     public abstract boolean isConnected();
     
@@ -55,11 +55,6 @@ public abstract class Connection implements Requester {
      */
     public ConnectionMetaInfo getMetaInfo() {
         return metaInfo;
-    }
-    
-    @Override
-    public boolean isBusy() {
-        return false;
     }
     
     @Override

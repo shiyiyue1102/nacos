@@ -143,7 +143,7 @@ public class RsocketUtils {
         String type = metaJsonNode.get("type").textValue();
     
         String bodyString = getPayloadString(payload);
-        Class classbyType = PayloadRegistry.getClassbyType(type);
+        Class classbyType = PayloadRegistry.getClassByType(type);
         PlainRequest plainRequest = new PlainRequest();
         plainRequest.setType(type);
         Response response = (Response) toObj(bodyString, classbyType);
@@ -173,7 +173,7 @@ public class RsocketUtils {
         requestMeta.setLabels(labels);
     
         String bodyString = getPayloadString(payload);
-        Class classbyType = PayloadRegistry.getClassbyType(type);
+        Class classbyType = PayloadRegistry.getClassByType(type);
         PlainRequest plainRequest = new PlainRequest();
         plainRequest.setType(type);
         Request request = (Request) toObj(bodyString, classbyType);
