@@ -63,11 +63,6 @@ public abstract class Connection implements Requester {
     }
     
     @Override
-    public boolean isBusy() {
-        return false;
-    }
-    
-    @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }

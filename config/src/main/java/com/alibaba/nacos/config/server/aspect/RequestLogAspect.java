@@ -57,8 +57,9 @@ public class RequestLogAspect {
      * Publish config.
      */
     private static final String CLIENT_INTERFACE_PUBLISH_SINGLE_CONFIG_RPC =
-            "execution(* com.alibaba.nacos.config.server.remote.ConfigPublishRequestHandler.handle(..)) && args"
-                    + "(request,meta,..)";
+            "execution(* com.alibaba.nacos.core.remote.RequestHandler.handleRequest(..)) "
+                    + "&& target(com.alibaba.nacos.config.server.remote.ConfigPublishRequestHandler) "
+                    + "&& args(request,meta,..)";
     
     /**
      * Get config.
@@ -71,7 +72,9 @@ public class RequestLogAspect {
      * Get config.
      */
     @SuppressWarnings("checkstyle:linelength")
-    private static final String CLIENT_INTERFACE_GET_CONFIG_RPC = "execution(* com.alibaba.nacos.config.server.remote.ConfigQueryRequestHandler.handle(..)) && args(request,requestMeta)";
+    private static final String CLIENT_INTERFACE_GET_CONFIG_RPC =
+            "execution(* com.alibaba.nacos.core.remote.RequestHandler.handleRequest(..)) "
+                    + " && target(com.alibaba.nacos.config.server.remote.ConfigQueryRequestHandler) && args(request,requestMeta)";
     
     /**
      * Remove config.
@@ -84,7 +87,9 @@ public class RequestLogAspect {
      * Remove config.
      */
     @SuppressWarnings("checkstyle:linelength")
-    private static final String CLIENT_INTERFACE_REMOVE_ALL_CONFIG_RPC = "execution(* com.alibaba.nacos.config.server.remote.ConfiRemoveRequestHandler.handle(..)) && args(request,meta)";
+    private static final String CLIENT_INTERFACE_REMOVE_ALL_CONFIG_RPC =
+            "execution(* com.alibaba.nacos.core.remote.RequestHandler.handleRequest(..)) "
+                    + " && target(com.alibaba.nacos.config.server.remote.ConfigRemoveRequestHandler) && args(request,meta)";
     
     /**
      * PublishSingle.

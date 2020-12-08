@@ -19,6 +19,7 @@ package com.alibaba.nacos.common.remote.client.rsocket;
 import com.alibaba.nacos.api.exception.runtime.NacosDeserializationException;
 import com.alibaba.nacos.api.exception.runtime.NacosSerializationException;
 import com.alibaba.nacos.api.remote.PayloadRegistry;
+import com.alibaba.nacos.api.remote.request.ConnectionSetupRequest;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.request.RequestMeta;
 import com.alibaba.nacos.api.remote.response.Response;
@@ -57,7 +58,7 @@ public class RsocketUtils {
      * @return json string
      * @throws NacosSerializationException if transfer failed
      */
-    private static String toJson(Object obj) {
+    public static String toJson(Object obj) {
         try {
             return mapper.writeValueAsString(obj);
         } catch (JsonProcessingException e) {
@@ -74,7 +75,7 @@ public class RsocketUtils {
      * @return object
      * @throws NacosDeserializationException if deserialize failed
      */
-    public static <T> T toObj(String json, Class<T> cls) {
+    private static <T> T toObj(String json, Class<T> cls) {
         try {
             return mapper.readValue(json, cls);
         } catch (IOException e) {
@@ -141,8 +142,8 @@ public class RsocketUtils {
         String metaString = payload.getMetadataUtf8();
         JsonNode metaJsonNode = toObj(metaString);
         String type = metaJsonNode.get("type").textValue();
-    
-        String bodyString = getPayloadString(payload);
+        
+        String bodyString = payload.getDataUtf8();
         Class classbyType = PayloadRegistry.getClassByType(type);
         PlainRequest plainRequest = new PlainRequest();
         plainRequest.setType(type);
@@ -163,7 +164,7 @@ public class RsocketUtils {
         String type = metaJsonNode.get("type").textValue();
         Map<String, String> labels = (Map<String, String>) toObj(metaJsonNode.get("labels").textValue(), Map.class);
         RequestMeta requestMeta = new RequestMeta();
-    
+        
         requestMeta.setClientVersion(
                 metaJsonNode.has("clientVersion") ? metaJsonNode.get("clientVersion").textValue() : "");
         requestMeta
@@ -171,8 +172,8 @@ public class RsocketUtils {
         requestMeta.setClientPort(metaJsonNode.has("clientPort") ? metaJsonNode.get("clientPort").intValue() : 0);
         requestMeta.setClientIp(metaJsonNode.has("clientIp") ? metaJsonNode.get("clientIp").textValue() : "");
         requestMeta.setLabels(labels);
-    
-        String bodyString = getPayloadString(payload);
+        
+        String bodyString = payload.getDataUtf8();
         Class classbyType = PayloadRegistry.getClassByType(type);
         PlainRequest plainRequest = new PlainRequest();
         plainRequest.setType(type);
@@ -180,10 +181,10 @@ public class RsocketUtils {
         Map<String, String> headers = (Map<String, String>) toObj(metaJsonNode.get("headers").textValue(), Map.class);
         request.putAllHeader(headers);
         plainRequest.setBody(request);
-    
+        
         plainRequest.setMetadata(requestMeta);
         return plainRequest;
-    
+        
     }
     
     private static String getPayloadString(Payload payload) {
@@ -197,16 +198,16 @@ public class RsocketUtils {
     public static class PlainRequest {
         
         String type;
-    
+        
         Request body;
-    
+        
         RequestMeta metadata;
-    
+        
         @Override
         public String toString() {
             return "PlainRequest{" + "type='" + type + '\'' + ", body=" + body + ", metadata=" + metadata + '}';
         }
-    
+        
         /**
          * Getter method for property <tt>metadata</tt>.
          *
@@ -215,7 +216,7 @@ public class RsocketUtils {
         public RequestMeta getMetadata() {
             return metadata;
         }
-    
+        
         /**
          * Setter method for property <tt>metadata</tt>.
          *
@@ -224,7 +225,7 @@ public class RsocketUtils {
         public void setMetadata(RequestMeta metadata) {
             this.metadata = metadata;
         }
-    
+        
         /**
          * Getter method for property <tt>type</tt>.
          *
