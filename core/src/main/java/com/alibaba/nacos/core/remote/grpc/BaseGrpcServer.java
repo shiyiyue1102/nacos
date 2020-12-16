@@ -19,6 +19,7 @@ package com.alibaba.nacos.core.remote.grpc;
 import com.alibaba.nacos.api.grpc.auto.Payload;
 import com.alibaba.nacos.common.remote.ConnectionType;
 import com.alibaba.nacos.common.utils.ReflectUtils;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.core.remote.BaseRpcServer;
 import com.alibaba.nacos.core.remote.ConnectionManager;
@@ -118,20 +119,28 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
                                 .get(Grpc.TRANSPORT_ATTR_LOCAL_ADDR);
                         int remotePort = remoteAddress.getPort();
                         int localPort = localAddress.getPort();
-                        Attributes attrWraper = transportAttrs.toBuilder()
+                        Attributes attrWrapper = transportAttrs.toBuilder()
                                 .set(TRANS_KEY_CONN_ID, UuidUtils.generateUuid()).set(TRANS_KEY_CLIENT_PORT, remotePort)
                                 .set(TRANS_KEY_LOCAL_PORT, localPort).build();
-                        String connectionId = attrWraper.get(TRANS_KEY_CONN_ID);
+                        String connectionId = attrWrapper.get(TRANS_KEY_CONN_ID);
                         Loggers.REMOTE.info(" connection transportReady,connectionId = {} ", connectionId);
-                        return attrWraper;
+                        return attrWrapper;
                         
                     }
                     
                     @Override
                     public void transportTerminated(Attributes transportAttrs) {
-                        String connectionId = transportAttrs.get(TRANS_KEY_CONN_ID);
-                        Loggers.REMOTE.info(" connection transportTerminated,connectionId = {} ", connectionId);
-                        connectionManager.unregister(connectionId);
+                        String connectionId = null;
+                        try {
+                            connectionId = transportAttrs.get(TRANS_KEY_CONN_ID);
+                        } catch (Throwable e) {
+                        
+                        }
+                        if (StringUtils.isNotBlank(connectionId)) {
+                            Loggers.REMOTE.info(" connection transportTerminated,connectionId = {} ", connectionId);
+                            connectionManager.unregister(connectionId);
+                        }
+                        
                     }
                 }).build();
         server.start();
