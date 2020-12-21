@@ -17,6 +17,7 @@
 package com.alibaba.nacos.core.remote.grpc;
 
 import com.alibaba.nacos.api.grpc.auto.Payload;
+import com.alibaba.nacos.common.executor.ExecutorFactory;
 import com.alibaba.nacos.common.remote.ConnectionType;
 import com.alibaba.nacos.common.utils.ReflectUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
@@ -25,6 +26,8 @@ import com.alibaba.nacos.core.remote.BaseRpcServer;
 import com.alibaba.nacos.core.remote.ConnectionManager;
 import com.alibaba.nacos.core.remote.RequestHandlerRegistry;
 import com.alibaba.nacos.core.utils.Loggers;
+import com.alibaba.nacos.core.utils.RemoteUtils;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.grpc.Attributes;
 import io.grpc.Context;
 import io.grpc.Contexts;
@@ -47,7 +50,9 @@ import io.grpc.util.MutableHandlerRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Grpc implementation as  a rpc server.
@@ -108,6 +113,11 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
         };
         
         addServices(handlerRegistry, serverInterceptor);
+        
+        grpcExecutor = new ThreadPoolExecutor(0,
+                Runtime.getRuntime().availableProcessors() * RemoteUtils.getRemoteExecutorTimesOfProcessors(), 10L,
+                TimeUnit.SECONDS, new SynchronousQueue(),
+                new ThreadFactoryBuilder().setDaemon(true).setNameFormat("nacos-grpc-executor-%d").build());
         
         server = ServerBuilder.forPort(getServicePort()).executor(grpcExecutor).fallbackHandlerRegistry(handlerRegistry)
                 .addTransportFilter(new ServerTransportFilter() {
@@ -193,7 +203,7 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
     }
     
     @Override
-    public void shundownServer() {
+    public void shutdownServer() {
         if (server != null) {
             server.shutdownNow();
         }

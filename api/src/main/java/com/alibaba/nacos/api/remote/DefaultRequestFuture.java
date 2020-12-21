@@ -100,7 +100,12 @@ public class DefaultRequestFuture implements RequestFuture {
         }
         
         if (requestCallBack != null) {
-            requestCallBack.getExcutor().execute(new CallBackHandler());
+            if (requestCallBack.getExecutor()!=null){
+                requestCallBack.getExecutor().execute(new CallBackHandler());
+            }else{
+                new CallBackHandler().run();
+            }
+            
         }
     }
     
