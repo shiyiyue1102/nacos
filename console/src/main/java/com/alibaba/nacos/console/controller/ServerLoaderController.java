@@ -27,6 +27,7 @@ import com.alibaba.nacos.auth.common.ActionTypes;
 import com.alibaba.nacos.common.executor.ExecutorFactory;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.config.server.utils.LogUtil;
+import com.alibaba.nacos.config.server.utils.RequestUtil;
 import com.alibaba.nacos.console.security.nacos.NacosAuthConfig;
 import com.alibaba.nacos.core.cluster.Member;
 import com.alibaba.nacos.core.cluster.MemberUtil;
@@ -38,6 +39,8 @@ import com.alibaba.nacos.core.remote.core.ServerLoaderInfoRequestHandler;
 import com.alibaba.nacos.core.remote.core.ServerReloaderRequestHandler;
 import com.alibaba.nacos.core.utils.RemoteUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,6 +48,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,6 +74,8 @@ import java.util.concurrent.TimeoutException;
 @RestController
 @RequestMapping("/v1/console/loader")
 public class ServerLoaderController {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(HealthController.class);
     
     @Autowired
     private ConnectionManager connectionManager;
@@ -121,6 +129,88 @@ public class ServerLoaderController {
         connectionManager.loadCount(count, redirectAddress);
         return ResponseEntity.ok().body("success");
     }
+    
+    /**
+     * Get server state of current server.
+     *
+     * @return state json.
+     */
+    @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "loader", action = ActionTypes.WRITE)
+    @GetMapping("/smartReload")
+    public ResponseEntity intelligentReload(HttpServletRequest request) {
+        
+        LOGGER.info("Intelligent reload request receive,requestIp={}", RequestUtil.getRemoteIp(request));
+        
+        Map<String, Object> serverLoadMetrics = getServerLoadMetrics();
+        Object avgString = (Object) serverLoadMetrics.get("avg");
+        List<ServerLoaderMetris> details = (List<ServerLoaderMetris>) serverLoadMetrics.get("detail");
+        int avg = Integer.valueOf(avgString.toString());
+        
+        int overLimitCount = (int) (avg * (1 + RemoteUtils.LOADER_FACTOR));
+        int lowLimitCount = (int) (avg * (1 - RemoteUtils.LOADER_FACTOR));
+        
+        List<ServerLoaderMetris> overLimitServer = new ArrayList<ServerLoaderMetris>();
+        List<ServerLoaderMetris> lowLimitServer = new ArrayList<ServerLoaderMetris>();
+        
+        for (ServerLoaderMetris metrics : details) {
+            int sdkCount = Integer.valueOf(metrics.getMetric().get("sdkConCount"));
+            if (sdkCount > overLimitCount) {
+                overLimitServer.add(metrics);
+            }
+            if (sdkCount <= lowLimitCount) {
+                lowLimitServer.add(metrics);
+            }
+        }
+        
+        // desc by sdkConCount
+        overLimitServer.sort(new Comparator<ServerLoaderMetris>() {
+            @Override
+            public int compare(ServerLoaderMetris o1, ServerLoaderMetris o2) {
+                Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+                Integer sdkCount2 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+                return sdkCount1.compareTo(sdkCount2) * -1;
+            }
+        });
+        
+        LOGGER.info("Over load limit server list ={}", overLimitServer);
+        
+        //asc by sdkConCount
+        lowLimitServer.sort(new Comparator<ServerLoaderMetris>() {
+            @Override
+            public int compare(ServerLoaderMetris o1, ServerLoaderMetris o2) {
+                Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+                Integer sdkCount2 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+                return sdkCount1.compareTo(sdkCount2);
+            }
+        });
+        
+        LOGGER.info("Low load limit server list ={}", lowLimitServer);
+        
+        CompletionService<ServerReloadResponse> completionService = new ExecutorCompletionService<ServerReloadResponse>(
+                executorService);
+        for (int i = 0; i < overLimitServer.size() & i < lowLimitServer.size(); i++) {
+            ServerReloadRequest serverLoaderInfoRequest = new ServerReloadRequest();
+            serverLoaderInfoRequest.setReloadCount(overLimitCount);
+            serverLoaderInfoRequest.setReloadServer(lowLimitServer.get(i).address);
+            Member member = serverMemberManager.find(overLimitServer.get(i).address);
+            
+            LOGGER.info("Reload task submit ,fromServer ={},toServer={}, ", overLimitServer.get(i).address,
+                    lowLimitServer.get(i).address);
+            
+            if (serverMemberManager.getSelf().equals(member)) {
+                try {
+                    serverReloaderRequestHandler.handle(serverLoaderInfoRequest, new RequestMeta());
+                } catch (NacosException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                completionService.submit(new ServerReLoaderRpcTask(serverLoaderInfoRequest, member));
+            }
+        }
+        
+        return ResponseEntity.ok().body("ok");
+    }
+    
     
     /**
      * Get server state of current server.

@@ -53,7 +53,7 @@ public class ServerReloaderRequestHandler extends RequestHandler<ServerReloadReq
             response.setMessage("ignore");
         } else {
             reloadCount = (int) Math.max(reloadCount, sdkCount * (1 - RemoteUtils.LOADER_FACTOR));
-            connectionManager.loadCount(reloadCount, null);
+            connectionManager.loadCount(reloadCount, request.getReloadServer());
             response.setMessage("ok");
         }
         return response;
