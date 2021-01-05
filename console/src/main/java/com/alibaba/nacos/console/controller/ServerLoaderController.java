@@ -66,7 +66,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * controller to controll server loader.
+ * controller to control server loader.
  *
  * @author liuzunfei
  * @version $Id: ServerLoaderController.java, v 0.1 2020年07月22日 4:28 PM liuzunfei Exp $
@@ -137,7 +137,8 @@ public class ServerLoaderController {
      */
     @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "loader", action = ActionTypes.WRITE)
     @GetMapping("/smartReload")
-    public ResponseEntity intelligentReload(HttpServletRequest request) {
+    public ResponseEntity intelligentReload(HttpServletRequest request,
+            @RequestParam(value = "loaderFactor", required = false) String loaderFactorStr) {
         
         LOGGER.info("Intelligent reload request receive,requestIp={}", RequestUtil.getRemoteIp(request));
         
@@ -145,9 +146,10 @@ public class ServerLoaderController {
         Object avgString = (Object) serverLoadMetrics.get("avg");
         List<ServerLoaderMetris> details = (List<ServerLoaderMetris>) serverLoadMetrics.get("detail");
         int avg = Integer.valueOf(avgString.toString());
-        
-        int overLimitCount = (int) (avg * (1 + RemoteUtils.LOADER_FACTOR));
-        int lowLimitCount = (int) (avg * (1 - RemoteUtils.LOADER_FACTOR));
+        float loaderFactor =
+                StringUtils.isBlank(loaderFactorStr) ? RemoteUtils.LOADER_FACTOR : Float.valueOf(loaderFactorStr);
+        int overLimitCount = (int) (avg * (1 + loaderFactor));
+        int lowLimitCount = (int) (avg * (1 - loaderFactor));
         
         List<ServerLoaderMetris> overLimitServer = new ArrayList<ServerLoaderMetris>();
         List<ServerLoaderMetris> lowLimitServer = new ArrayList<ServerLoaderMetris>();
@@ -157,7 +159,7 @@ public class ServerLoaderController {
             if (sdkCount > overLimitCount) {
                 overLimitServer.add(metrics);
             }
-            if (sdkCount <= lowLimitCount) {
+            if (sdkCount < lowLimitCount) {
                 lowLimitServer.add(metrics);
             }
         }
@@ -167,7 +169,7 @@ public class ServerLoaderController {
             @Override
             public int compare(ServerLoaderMetris o1, ServerLoaderMetris o2) {
                 Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
-                Integer sdkCount2 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+                Integer sdkCount2 = Integer.valueOf(o2.getMetric().get("sdkConCount"));
                 return sdkCount1.compareTo(sdkCount2) * -1;
             }
         });
@@ -179,7 +181,7 @@ public class ServerLoaderController {
             @Override
             public int compare(ServerLoaderMetris o1, ServerLoaderMetris o2) {
                 Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
-                Integer sdkCount2 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+                Integer sdkCount2 = Integer.valueOf(o2.getMetric().get("sdkConCount"));
                 return sdkCount1.compareTo(sdkCount2);
             }
         });
