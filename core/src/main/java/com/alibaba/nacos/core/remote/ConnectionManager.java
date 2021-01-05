@@ -197,8 +197,9 @@ public class ConnectionManager {
                             if (connection != null) {
                                 connection.asyncRequest(connectResetRequest, buildMeta(), null);
                                 Loggers.REMOTE
-                                        .info("expel connection ,send switch server response connection id = {},connectResetRequest={} ",
-                                                expelledClientId, connectResetRequest);
+                                        .info("send switch server response connection id = {},recommendServerIp={}, recommendServerPort={}",
+                                                expelledClientId, connectResetRequest.getServerIp(),
+                                                connectResetRequest.getServerPort());
                             }
                             
                         } catch (ConnectionAlreadyClosedException e) {

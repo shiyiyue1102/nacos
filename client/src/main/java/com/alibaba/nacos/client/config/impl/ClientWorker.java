@@ -746,7 +746,7 @@ public class ClientWorker implements Closeable {
                                                     changeConfig.getTenant());
                                     changeKeys.add(changeKey);
                                     boolean isInitializing = cacheMap.get().get(changeKey).isInitializing();
-                                    this.executor.execute(() -> refreshContentAndCheck(changeKey, !isInitializing));
+                                    refreshContentAndCheck(changeKey, !isInitializing);
                                     
                                 }
                             }
