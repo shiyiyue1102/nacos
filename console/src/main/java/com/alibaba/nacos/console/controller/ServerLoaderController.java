@@ -50,7 +50,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -112,7 +111,7 @@ public class ServerLoaderController {
     @GetMapping("/max")
     public ResponseEntity updateMaxClients(@RequestParam Integer count) {
         Map<String, String> responseMap = new HashMap<>(3);
-        connectionManager.coordinateMaxClientsSmoth(count);
+        connectionManager.setMaxClientCount(count);
         return ResponseEntity.ok().body("success");
     }
     
@@ -137,24 +136,24 @@ public class ServerLoaderController {
      */
     @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "loader", action = ActionTypes.WRITE)
     @GetMapping("/smartReload")
-    public ResponseEntity intelligentReload(HttpServletRequest request,
+    public ResponseEntity smartReload(HttpServletRequest request,
             @RequestParam(value = "loaderFactor", required = false) String loaderFactorStr) {
         
-        LOGGER.info("Intelligent reload request receive,requestIp={}", RequestUtil.getRemoteIp(request));
+        LOGGER.info("Smart reload request receive,requestIp={}", RequestUtil.getRemoteIp(request));
         
         Map<String, Object> serverLoadMetrics = getServerLoadMetrics();
         Object avgString = (Object) serverLoadMetrics.get("avg");
-        List<ServerLoaderMetris> details = (List<ServerLoaderMetris>) serverLoadMetrics.get("detail");
+        List<ServerLoaderMetrics> details = (List<ServerLoaderMetrics>) serverLoadMetrics.get("detail");
         int avg = Integer.valueOf(avgString.toString());
         float loaderFactor =
                 StringUtils.isBlank(loaderFactorStr) ? RemoteUtils.LOADER_FACTOR : Float.valueOf(loaderFactorStr);
         int overLimitCount = (int) (avg * (1 + loaderFactor));
         int lowLimitCount = (int) (avg * (1 - loaderFactor));
         
-        List<ServerLoaderMetris> overLimitServer = new ArrayList<ServerLoaderMetris>();
-        List<ServerLoaderMetris> lowLimitServer = new ArrayList<ServerLoaderMetris>();
+        List<ServerLoaderMetrics> overLimitServer = new ArrayList<ServerLoaderMetrics>();
+        List<ServerLoaderMetrics> lowLimitServer = new ArrayList<ServerLoaderMetrics>();
         
-        for (ServerLoaderMetris metrics : details) {
+        for (ServerLoaderMetrics metrics : details) {
             int sdkCount = Integer.valueOf(metrics.getMetric().get("sdkConCount"));
             if (sdkCount > overLimitCount) {
                 overLimitServer.add(metrics);
@@ -165,25 +164,19 @@ public class ServerLoaderController {
         }
         
         // desc by sdkConCount
-        overLimitServer.sort(new Comparator<ServerLoaderMetris>() {
-            @Override
-            public int compare(ServerLoaderMetris o1, ServerLoaderMetris o2) {
-                Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
-                Integer sdkCount2 = Integer.valueOf(o2.getMetric().get("sdkConCount"));
-                return sdkCount1.compareTo(sdkCount2) * -1;
-            }
+        overLimitServer.sort((o1, o2) -> {
+            Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+            Integer sdkCount2 = Integer.valueOf(o2.getMetric().get("sdkConCount"));
+            return sdkCount1.compareTo(sdkCount2) * -1;
         });
         
         LOGGER.info("Over load limit server list ={}", overLimitServer);
         
         //asc by sdkConCount
-        lowLimitServer.sort(new Comparator<ServerLoaderMetris>() {
-            @Override
-            public int compare(ServerLoaderMetris o1, ServerLoaderMetris o2) {
-                Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
-                Integer sdkCount2 = Integer.valueOf(o2.getMetric().get("sdkConCount"));
-                return sdkCount1.compareTo(sdkCount2);
-            }
+        lowLimitServer.sort((o1, o2) -> {
+            Integer sdkCount1 = Integer.valueOf(o1.getMetric().get("sdkConCount"));
+            Integer sdkCount2 = Integer.valueOf(o2.getMetric().get("sdkConCount"));
+            return sdkCount1.compareTo(sdkCount2);
         });
         
         LOGGER.info("Low load limit server list ={}", lowLimitServer);
@@ -295,7 +288,7 @@ public class ServerLoaderController {
      */
     @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "loader", action = ActionTypes.READ)
     @GetMapping("/clustermetric")
-    public ResponseEntity clusterLoader() {
+    public ResponseEntity loaderMetrics() {
         
         Map<String, Object> serverLoadMetrics = getServerLoadMetrics();
         
@@ -304,7 +297,7 @@ public class ServerLoaderController {
     
     private Map<String, Object> getServerLoadMetrics() {
         
-        CompletionService<ServerLoaderMetris> completionService = new ExecutorCompletionService<ServerLoaderMetris>(
+        CompletionService<ServerLoaderMetrics> completionService = new ExecutorCompletionService<ServerLoaderMetrics>(
                 executorService);
         
         int count = 0;
@@ -316,12 +309,12 @@ public class ServerLoaderController {
             }
         }
         
-        List<ServerLoaderMetris> responseList = new LinkedList<ServerLoaderMetris>();
+        List<ServerLoaderMetrics> responseList = new LinkedList<ServerLoaderMetrics>();
         
         try {
             ServerLoaderInfoResponse handle = serverLoaderInfoRequestHandler
                     .handle(new ServerLoaderInfoRequest(), new RequestMeta());
-            ServerLoaderMetris metris = new ServerLoaderMetris();
+            ServerLoaderMetrics metris = new ServerLoaderMetrics();
             metris.setAddress(serverMemberManager.getSelf().getAddress());
             metris.setMetric(handle.getLoaderMetrics());
             responseList.add(metris);
@@ -329,13 +322,15 @@ public class ServerLoaderController {
             e.printStackTrace();
         }
         
+        int resultCount = 0;
         for (int i = 0; i < count; i++) {
             try {
-                Future<ServerLoaderMetris> f = completionService.poll(1000, TimeUnit.MILLISECONDS);
+                Future<ServerLoaderMetrics> f = completionService.poll(1000, TimeUnit.MILLISECONDS);
                 try {
                     if (f != null) {
-                        ServerLoaderMetris response = f.get(500, TimeUnit.MILLISECONDS);
+                        ServerLoaderMetrics response = f.get(500, TimeUnit.MILLISECONDS);
                         if (response != null) {
+                            resultCount++;
                             responseList.add(response);
                         }
                     }
@@ -354,12 +349,15 @@ public class ServerLoaderController {
         Map<String, Object> responseMap = new HashMap<>(3);
         
         responseMap.put("detail", responseList);
+        responseMap.put("memberCount", count);
+        responseMap.put("metricsCount", resultCount);
+        
         int max = 0;
         int min = -1;
         int total = 0;
         
-        for (ServerLoaderMetris serverLoaderMetris : responseList) {
-            String sdkConCountStr = serverLoaderMetris.getMetric().get("sdkConCount");
+        for (ServerLoaderMetrics serverLoaderMetrics : responseList) {
+            String sdkConCountStr = serverLoaderMetrics.getMetric().get("sdkConCount");
             
             if (StringUtils.isNotBlank(sdkConCountStr)) {
                 int sdkConCount = Integer.valueOf(sdkConCountStr);
@@ -382,7 +380,7 @@ public class ServerLoaderController {
         
     }
     
-    class ServerLoaderInfoRpcTask implements Callable<ServerLoaderMetris> {
+    class ServerLoaderInfoRpcTask implements Callable<ServerLoaderMetrics> {
         
         ServerLoaderInfoRequest request;
         
@@ -394,18 +392,18 @@ public class ServerLoaderController {
         }
         
         @Override
-        public ServerLoaderMetris call() throws Exception {
+        public ServerLoaderMetrics call() throws Exception {
             
             ServerLoaderInfoResponse response = (ServerLoaderInfoResponse) clusterRpcClientProxy
                     .sendRequest(this.member, this.request);
-            ServerLoaderMetris metris = new ServerLoaderMetris();
+            ServerLoaderMetrics metris = new ServerLoaderMetrics();
             metris.setAddress(member.getAddress());
             metris.setMetric(response.getLoaderMetrics());
             return metris;
         }
     }
     
-    class ServerLoaderMetris {
+    class ServerLoaderMetrics {
         
         String address;
         

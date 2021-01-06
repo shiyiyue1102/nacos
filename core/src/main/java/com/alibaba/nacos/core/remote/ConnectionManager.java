@@ -227,7 +227,7 @@ public class ConnectionManager {
         return meta;
     }
     
-    public void coordinateMaxClientsSmoth(int maxClient) {
+    public void setMaxClientCount(int maxClient) {
         this.maxClient = maxClient;
     }
     

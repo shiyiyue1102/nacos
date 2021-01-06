@@ -194,7 +194,7 @@ public abstract class GrpcClient extends RpcClient {
                     }
                 } else {
                     LoggerUtils.printIfInfoEnabled(LOGGER, "[{}]ignore complete event,isRunning:{},isAbandon={}",
-                            isRunning, GrpcClient.this.getName(), isAbandon);
+                            GrpcClient.this.getName(), isRunning, isAbandon);
                 }
                 
             }

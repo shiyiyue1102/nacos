@@ -262,7 +262,7 @@ public abstract class RpcClient implements Closeable {
                 startUpRetryTimes--;
                 ServerInfo serverInfo = nextRpcServer();
                 
-                LoggerUtils.printIfInfoEnabled(LOGGER, "[{}] try to connect to server on start up, server: %s", name,
+                LoggerUtils.printIfInfoEnabled(LOGGER, "[{}] try to connect to server on start up, server: {}", name,
                         serverInfo);
                 
                 connectToServer = connectToServer(serverInfo);
