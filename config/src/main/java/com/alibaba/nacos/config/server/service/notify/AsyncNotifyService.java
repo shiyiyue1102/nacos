@@ -37,6 +37,7 @@ import com.alibaba.nacos.config.server.service.dump.DumpService;
 import com.alibaba.nacos.config.server.service.trace.ConfigTraceService;
 import com.alibaba.nacos.config.server.utils.ConfigExecutor;
 import com.alibaba.nacos.config.server.utils.LogUtil;
+import com.alibaba.nacos.config.server.utils.PropertyUtil;
 import com.alibaba.nacos.core.cluster.Member;
 import com.alibaba.nacos.core.cluster.MemberUtil;
 import com.alibaba.nacos.core.cluster.ServerMemberManager;
@@ -224,7 +225,7 @@ public class AsyncNotifyService {
                         // get delay time and set fail count to the task
                         asyncTaskExecute(task);
                     } else {
-    
+                        
                         if (!MemberUtil.isSupportedLongCon(member)) {
                             asyncTaskExecute(
                                     new NotifySingleTask(task.getDataId(), task.getGroup(), task.getTenant(), task.tag,
@@ -238,7 +239,7 @@ public class AsyncNotifyService {
                                 asyncTaskExecute(task);
                             }
                         }
-                      
+                        
                     }
                 } else {
                     //No nothig if  member has offline.
@@ -364,7 +365,7 @@ public class AsyncNotifyService {
         
         @Override
         public long getTimeout() {
-            return 1000L;
+            return PropertyUtil.getNotifySocketTimeout();
         }
         
         @Override
