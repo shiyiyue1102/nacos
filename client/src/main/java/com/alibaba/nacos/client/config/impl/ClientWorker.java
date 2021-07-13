@@ -68,6 +68,7 @@ import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,6 +84,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.alibaba.nacos.api.common.Constants.ENCODE;
@@ -115,6 +117,11 @@ public class ClientWorker implements Closeable {
      */
     private final AtomicReference<Map<String, CacheData>> cacheMap = new AtomicReference<Map<String, CacheData>>(
             new HashMap<String, CacheData>());
+    
+    /**
+     * index(taskId)-> total cache count for this taskId.
+     */
+    private final List<AtomicInteger> taskIdCacheCountList = new ArrayList<AtomicInteger>();
     
     private final ConfigFilterChainManager configFilterChainManager;
     
@@ -243,23 +250,14 @@ public class ClientWorker implements Closeable {
         }
     }
     
-    private void removeCache(String dataId, String group) {
-        String groupKey = GroupKey.getKey(dataId, group);
-        synchronized (cacheMap) {
-            Map<String, CacheData> copy = new HashMap<String, CacheData>(cacheMap.get());
-            copy.remove(groupKey);
-            cacheMap.set(copy);
-        }
-        LOGGER.info("[{}] [unsubscribe] {}", this.agent.getName(), groupKey);
-        
-        MetricsMonitor.getListenConfigCountMonitor().set(cacheMap.get().size());
-    }
-    
     void removeCache(String dataId, String group, String tenant) {
         String groupKey = GroupKey.getKeyTenant(dataId, group, tenant);
         synchronized (cacheMap) {
             Map<String, CacheData> copy = new HashMap<String, CacheData>(cacheMap.get());
-            copy.remove(groupKey);
+            CacheData remove = copy.remove(groupKey);
+            if (remove != null) {
+                decreaseTaskIdCount(remove.getTaskId());
+            }
             cacheMap.set(copy);
         }
         LOGGER.info("[{}] [unsubscribe] {}", agent.getName(), groupKey);
@@ -302,6 +300,30 @@ public class ClientWorker implements Closeable {
                 .publishConfig(dataId, group, tenant, appName, tag, betaIps, content, encryptedDataKey, casMd5, type);
     }
     
+    
+    private void increaseTaskIdCount(int taskId) {
+        taskIdCacheCountList.get(taskId).incrementAndGet();
+    }
+    
+    private void decreaseTaskIdCount(int taskId) {
+        taskIdCacheCountList.get(taskId).decrementAndGet();
+    }
+    
+    private int calculateTaskId() {
+        int perTaskSize = (int) ParamUtil.getPerTaskConfigSize();
+        int taskId = -1;
+        for (int index = 0; index < taskIdCacheCountList.size(); index++) {
+            if (taskIdCacheCountList.get(index).get() < perTaskSize) {
+                return index;
+            }
+        }
+        if (taskId < 0) {
+            taskIdCacheCountList.add(new AtomicInteger(0));
+            taskId = taskIdCacheCountList.size() - 1;
+        }
+        return taskId;
+    }
+    
     /**
      * Add cache data if absent.
      *
@@ -327,7 +349,8 @@ public class ClientWorker implements Closeable {
                 //reset so that server not hang this check
                 cache.setInitializing(true);
             } else {
-                int taskId = cacheMap.get().size() / (int) ParamUtil.getPerTaskConfigSize();
+                int taskId = calculateTaskId();
+                increaseTaskIdCount(taskId);
                 cache.setTaskId(taskId);
             }
             
@@ -368,7 +391,8 @@ public class ClientWorker implements Closeable {
                 cache.setInitializing(true);
             } else {
                 cache = new CacheData(configFilterChainManager, agent.getName(), dataId, group, tenant);
-                int taskId = cacheMap.get().size() / (int) ParamUtil.getPerTaskConfigSize();
+                int taskId = calculateTaskId();
+                increaseTaskIdCount(taskId);
                 cache.setTaskId(taskId);
                 // fix issue # 1317
                 if (enableRemoteSyncConfig) {
