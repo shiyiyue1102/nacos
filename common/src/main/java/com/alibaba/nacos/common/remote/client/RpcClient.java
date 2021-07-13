@@ -29,6 +29,7 @@ import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.response.ClientDetectionResponse;
 import com.alibaba.nacos.api.remote.response.ConnectResetResponse;
 import com.alibaba.nacos.api.remote.response.ErrorResponse;
+import com.alibaba.nacos.api.remote.response.HealthCheckResponse;
 import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.common.lifecycle.Closeable;
 import com.alibaba.nacos.common.remote.ConnectionType;
@@ -473,7 +474,8 @@ public abstract class RpcClient implements Closeable {
             return false;
         }
         try {
-            Response response = this.currentConnection.request(healthCheckRequest, 3000L);
+            HealthCheckResponse response = (HealthCheckResponse) this.currentConnection
+                    .request(healthCheckRequest, 3000L);
             //not only check server is ok ,also check connection is register.
             return response != null && response.isSuccess();
         } catch (NacosException e) {
