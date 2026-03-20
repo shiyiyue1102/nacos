@@ -940,7 +940,7 @@
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.controller.ConfigServletInner","com.alibaba.nacos.config.server.service.ConfigOperationService","com.alibaba.nacos.config.server.service.ConfigSubService","com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.core.namespace.repository.NamespacePersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService"] }, {"name":"detailConfigInfo","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"fuzzySearchConfig","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","int","int"] }, {"name":"publishConfig","parameterTypes":["jakarta.servlet.http.HttpServletRequest","jakarta.servlet.http.HttpServletResponse","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.controller.ConfigServletInner","com.alibaba.nacos.config.server.service.ConfigOperationService","com.alibaba.nacos.config.server.service.ConfigSubService","com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.core.namespace.repository.NamespacePersistService"] }, {"name":"detailConfigInfo","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"fuzzySearchConfig","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","int","int"] }, {"name":"publishConfig","parameterTypes":["jakarta.servlet.http.HttpServletRequest","jakarta.servlet.http.HttpServletResponse","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.controller.ConfigController$$SpringCGLIB$$0",
@@ -1083,12 +1083,6 @@
   "methods":[{"name":"getAppName","parameterTypes":[] }, {"name":"getTenant","parameterTypes":[] }, {"name":"getType","parameterTypes":[] }]
 },
 {
-  "name":"com.alibaba.nacos.config.server.model.ConfigInfo4Beta",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllPublicMethods":true
-},
-{
   "name":"com.alibaba.nacos.config.server.model.ConfigInfoBase",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
@@ -1096,13 +1090,7 @@
   "methods":[{"name":"getContent","parameterTypes":[] }, {"name":"getDataId","parameterTypes":[] }, {"name":"getEncryptedDataKey","parameterTypes":[] }, {"name":"getGroup","parameterTypes":[] }, {"name":"getId","parameterTypes":[] }, {"name":"getMd5","parameterTypes":[] }]
 },
 {
-  "name":"com.alibaba.nacos.config.server.model.ConfigInfoBetaWrapper"
-},
-{
   "name":"com.alibaba.nacos.config.server.model.ConfigInfoStateWrapper"
-},
-{
-  "name":"com.alibaba.nacos.config.server.model.ConfigInfoTagWrapper"
 },
 {
   "name":"com.alibaba.nacos.config.server.model.ConfigInfoWrapper",
@@ -1232,7 +1220,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService"] }, {"name":"handle","parameterTypes":["com.alibaba.nacos.api.remote.request.Request","com.alibaba.nacos.api.remote.request.RequestMeta"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService"] }, {"name":"handle","parameterTypes":["com.alibaba.nacos.api.remote.request.Request","com.alibaba.nacos.api.remote.request.RequestMeta"] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.remote.ConfigPublishRequestHandler$$SpringCGLIB$$0",
@@ -1256,7 +1244,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService"] }, {"name":"handle","parameterTypes":["com.alibaba.nacos.api.remote.request.Request","com.alibaba.nacos.api.remote.request.RequestMeta"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService"] }, {"name":"handle","parameterTypes":["com.alibaba.nacos.api.remote.request.Request","com.alibaba.nacos.api.remote.request.RequestMeta"] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.remote.ConfigRemoveRequestHandler$$SpringCGLIB$$0",
@@ -1292,7 +1280,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService"] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.service.ConfigReadinessCheckService",
@@ -1371,14 +1359,14 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.core.namespace.repository.NamespacePersistService","com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService","com.alibaba.nacos.config.server.service.merge.MergeDatumService","com.alibaba.nacos.core.cluster.ServerMemberManager","com.alibaba.nacos.core.distributed.ProtocolManager"] }, {"name":"init","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.core.namespace.repository.NamespacePersistService","com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService","com.alibaba.nacos.config.server.service.merge.MergeDatumService","com.alibaba.nacos.core.cluster.ServerMemberManager","com.alibaba.nacos.core.distributed.ProtocolManager"] }, {"name":"init","parameterTypes":[] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.service.dump.ExternalDumpService",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.core.namespace.repository.NamespacePersistService","com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService","com.alibaba.nacos.config.server.service.merge.MergeDatumService","com.alibaba.nacos.core.cluster.ServerMemberManager"] }, {"name":"init","parameterTypes":[] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.core.namespace.repository.NamespacePersistService","com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService","com.alibaba.nacos.config.server.service.merge.MergeDatumService","com.alibaba.nacos.core.cluster.ServerMemberManager"] }, {"name":"init","parameterTypes":[] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.service.dump.processor.DumpAllProcessor"
@@ -1388,7 +1376,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService","com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService"] }]
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService"] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.service.notify.AsyncNotifyService",
@@ -1401,21 +1389,7 @@
   "name":"com.alibaba.nacos.config.server.service.notify.AsyncNotifyService$NotifySingleRpcTask"
 },
 {
-  "name":"com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllPublicMethods":true,
-  "queryAllDeclaredConstructors":true
-},
-{
   "name":"com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllPublicMethods":true,
-  "queryAllDeclaredConstructors":true
-},
-{
-  "name":"com.alibaba.nacos.config.server.service.repository.ConfigInfoTagPersistService",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
@@ -1453,18 +1427,6 @@
   "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
 },
 {
-  "name":"com.alibaba.nacos.config.server.service.repository.embedded.EmbeddedConfigInfoBetaPersistServiceImpl",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.persistence.repository.embedded.operate.DatabaseOperate"] }, {"name":"addConfigInfo4Beta","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"configInfoBetaCount","parameterTypes":[] }, {"name":"createPaginationHelper","parameterTypes":[] }, {"name":"findAllConfigInfoBetaForDumpAll","parameterTypes":["int","int"] }, {"name":"findConfigInfo4Beta","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"findConfigInfo4BetaState","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateBeta","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateBetaCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"removeConfigInfo4Beta","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4Beta","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4BetaCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }]
-},
-{
-  "name":"com.alibaba.nacos.config.server.service.repository.embedded.EmbeddedConfigInfoBetaPersistServiceImpl$$SpringCGLIB$$0",
-  "fields":[{"name":"CGLIB$CALLBACK_FILTER"}, {"name":"CGLIB$FACTORY_DATA"}],
-  "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
-},
-{
   "name":"com.alibaba.nacos.config.server.service.repository.embedded.EmbeddedConfigInfoPersistServiceImpl",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
@@ -1473,18 +1435,6 @@
 },
 {
   "name":"com.alibaba.nacos.config.server.service.repository.embedded.EmbeddedConfigInfoPersistServiceImpl$$SpringCGLIB$$0",
-  "fields":[{"name":"CGLIB$CALLBACK_FILTER"}, {"name":"CGLIB$FACTORY_DATA"}],
-  "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
-},
-{
-  "name":"com.alibaba.nacos.config.server.service.repository.embedded.EmbeddedConfigInfoTagPersistServiceImpl",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.persistence.repository.embedded.operate.DatabaseOperate"] }, {"name":"addConfigInfo4Tag","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"configInfoTagCount","parameterTypes":[] }, {"name":"createPaginationHelper","parameterTypes":[] }, {"name":"findAllConfigInfoTagForDumpAll","parameterTypes":["int","int"] }, {"name":"findConfigInfo4Tag","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"findConfigInfo4TagState","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"findConfigInfoTags","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateTag","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateTagCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"removeConfigInfoTag","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4Tag","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4TagCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }]
-},
-{
-  "name":"com.alibaba.nacos.config.server.service.repository.embedded.EmbeddedConfigInfoTagPersistServiceImpl$$SpringCGLIB$$0",
   "fields":[{"name":"CGLIB$CALLBACK_FILTER"}, {"name":"CGLIB$FACTORY_DATA"}],
   "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
 },
@@ -1501,18 +1451,6 @@
   "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
 },
 {
-  "name":"com.alibaba.nacos.config.server.service.repository.extrnal.ExternalConfigInfoBetaPersistServiceImpl",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"addConfigInfo4Beta","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"configInfoBetaCount","parameterTypes":[] }, {"name":"createPaginationHelper","parameterTypes":[] }, {"name":"findAllConfigInfoBetaForDumpAll","parameterTypes":["int","int"] }, {"name":"findConfigInfo4Beta","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"findConfigInfo4BetaState","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateBeta","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateBetaCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"removeConfigInfo4Beta","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4Beta","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4BetaCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }]
-},
-{
-  "name":"com.alibaba.nacos.config.server.service.repository.extrnal.ExternalConfigInfoBetaPersistServiceImpl$$SpringCGLIB$$0",
-  "fields":[{"name":"CGLIB$CALLBACK_FILTER"}, {"name":"CGLIB$FACTORY_DATA"}],
-  "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
-},
-{
   "name":"com.alibaba.nacos.config.server.service.repository.extrnal.ExternalConfigInfoPersistServiceImpl",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
@@ -1521,18 +1459,6 @@
 },
 {
   "name":"com.alibaba.nacos.config.server.service.repository.extrnal.ExternalConfigInfoPersistServiceImpl$$SpringCGLIB$$0",
-  "fields":[{"name":"CGLIB$CALLBACK_FILTER"}, {"name":"CGLIB$FACTORY_DATA"}],
-  "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
-},
-{
-  "name":"com.alibaba.nacos.config.server.service.repository.extrnal.ExternalConfigInfoTagPersistServiceImpl",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"addConfigInfo4Tag","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"configInfoTagCount","parameterTypes":[] }, {"name":"createPaginationHelper","parameterTypes":[] }, {"name":"findAllConfigInfoTagForDumpAll","parameterTypes":["int","int"] }, {"name":"findConfigInfo4Tag","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"findConfigInfo4TagState","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"findConfigInfoTags","parameterTypes":["java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateTag","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"insertOrUpdateTagCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"removeConfigInfoTag","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4Tag","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }, {"name":"updateConfigInfo4TagCas","parameterTypes":["com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.lang.String"] }]
-},
-{
-  "name":"com.alibaba.nacos.config.server.service.repository.extrnal.ExternalConfigInfoTagPersistServiceImpl$$SpringCGLIB$$0",
   "fields":[{"name":"CGLIB$CALLBACK_FILTER"}, {"name":"CGLIB$FACTORY_DATA"}],
   "methods":[{"name":"CGLIB$SET_THREAD_CALLBACKS","parameterTypes":["org.springframework.cglib.proxy.Callback[]"] }]
 },

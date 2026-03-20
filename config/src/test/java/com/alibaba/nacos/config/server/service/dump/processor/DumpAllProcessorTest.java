@@ -20,7 +20,6 @@ import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.config.server.model.CacheItem;
 import com.alibaba.nacos.config.server.model.ConfigInfoWrapper;
 import com.alibaba.nacos.config.server.service.ConfigCacheService;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.dump.ExternalDumpService;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigDiskServiceFactory;
 import com.alibaba.nacos.config.server.service.dump.task.DumpAllTask;
@@ -68,8 +67,6 @@ class DumpAllProcessorTest {
     @Mock
     ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    ConfigMigrateService configMigrateService;
-    
     DumpAllProcessor dumpAllProcessor;
     
     ExternalDumpService dumpService;
@@ -100,7 +97,7 @@ class DumpAllProcessorTest {
         when(dynamicDataSource.getDataSource()).thenReturn(dataSourceService);
         
         dumpService = new ExternalDumpService(configInfoPersistService, null,
-                null, configInfoGrayPersistService, null, configMigrateService);
+                null, configInfoGrayPersistService, null);
         
         dumpAllProcessor = new DumpAllProcessor(configInfoPersistService);
         envUtilMockedStatic.when(() -> EnvUtil.getProperty(eq("memory_limit_file_path"),

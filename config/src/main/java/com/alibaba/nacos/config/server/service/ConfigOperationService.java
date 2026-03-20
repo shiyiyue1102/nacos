@@ -67,16 +67,12 @@ public class ConfigOperationService {
     
     private ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    private ConfigMigrateService configMigrateService;
-    
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigOperationService.class);
     
     public ConfigOperationService(ConfigInfoPersistService configInfoPersistService,
-            ConfigInfoGrayPersistService configInfoGrayPersistService,
-            ConfigMigrateService configMigrateService) {
+            ConfigInfoGrayPersistService configInfoGrayPersistService) {
         this.configInfoPersistService = configInfoPersistService;
         this.configInfoGrayPersistService = configInfoGrayPersistService;
-        this.configMigrateService = configMigrateService;
     }
     
     /**
@@ -118,8 +114,6 @@ public class ConfigOperationService {
         }
         
         ConfigOperateResult configOperateResult;
-        
-        configMigrateService.publishConfigMigrate(configForm, configRequestInfo, configForm.getEncryptedDataKey());
         
         //formal publish
         if (StringUtils.isNotBlank(configRequestInfo.getCasMd5())) {
@@ -273,7 +267,6 @@ public class ConfigOperationService {
         String persistEvent = ConfigTraceService.PERSISTENCE_EVENT;
         if (StringUtils.isBlank(grayName)) {
             configInfoPersistService.removeConfigInfo(dataId, group, namespaceId, clientIp, srcUser);
-            configMigrateService.removeConfigInfoMigrate(dataId, group, namespaceId, clientIp, srcUser);
         } else {
             persistEvent = ConfigTraceService.PERSISTENCE_EVENT + "-" + grayName;
             configInfoGrayPersistService.removeConfigInfoGray(dataId, group, namespaceId, grayName, clientIp, srcUser);

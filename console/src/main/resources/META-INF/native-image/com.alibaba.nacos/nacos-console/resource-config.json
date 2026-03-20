@@ -291,11 +291,7 @@
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/notify/AsyncNotifyService.class\\E"
   }, {
-    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigInfoBetaPersistService.class\\E"
-  }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigInfoPersistService.class\\E"
-  }, {
-    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigInfoTagPersistService.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigRowMapperInjector$ConfigAdvanceInfoRowMapper.class\\E"
   }, {
@@ -331,19 +327,11 @@
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigDumpApplyHook.class\\E"
   }, {
-    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigInfoBetaPersistServiceImpl.class\\E"
-  }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigInfoPersistServiceImpl.class\\E"
-  }, {
-    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigInfoTagPersistServiceImpl.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedHistoryConfigInfoPersistServiceImpl.class\\E"
   }, {
-    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/extrnal/ExternalConfigInfoBetaPersistServiceImpl.class\\E"
-  }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/extrnal/ExternalConfigInfoPersistServiceImpl.class\\E"
-  }, {
-    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/extrnal/ExternalConfigInfoTagPersistServiceImpl.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/extrnal/ExternalHistoryConfigInfoPersistServiceImpl.class\\E"
   }, {

@@ -20,7 +20,6 @@ import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.config.server.model.ConfigInfoStateWrapper;
 import com.alibaba.nacos.config.server.model.ConfigInfoWrapper;
 import com.alibaba.nacos.config.server.service.ConfigCacheService;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigDiskService;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigDiskServiceFactory;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigRocksDbDiskService;
@@ -71,9 +70,6 @@ class DumpChangeConfigWorkerTest {
     @Mock
     HistoryConfigInfoPersistService historyConfigInfoPersistService;
     
-    @Mock
-    ConfigMigrateService configMigrateService;
-    
     DumpChangeConfigWorker dumpChangeConfigWorker;
     
     MockedStatic<DynamicDataSource> dynamicDataSourceMockedStatic;
@@ -97,7 +93,7 @@ class DumpChangeConfigWorkerTest {
         }
         
         dumpChangeConfigWorker = new DumpChangeConfigWorker(configInfoPersistService, historyConfigInfoPersistService,
-                configMigrateService, new Timestamp(System.currentTimeMillis()));
+                new Timestamp(System.currentTimeMillis()));
     }
     
     protected ConfigDiskService createDiskService() {

@@ -30,10 +30,8 @@ import com.alibaba.nacos.config.server.model.ConfigInfoGrayWrapper;
 import com.alibaba.nacos.config.server.model.ConfigMetadata;
 import com.alibaba.nacos.config.server.model.event.ConfigDataChangeEvent;
 import com.alibaba.nacos.config.server.service.ConfigDetailService;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.ConfigOperationService;
 import com.alibaba.nacos.config.server.service.listener.ConfigListenerStateDelegate;
-import com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService;
 import com.alibaba.nacos.config.server.utils.YamlParserUtil;
@@ -92,9 +90,6 @@ class ConfigControllerV3Test {
     private ConfigInfoPersistService configInfoPersistService;
     
     @Mock
-    private ConfigInfoBetaPersistService configInfoBetaPersistService;
-    
-    @Mock
     private ConfigInfoGrayPersistService configInfoGrayPersistService;
     
     @Mock
@@ -109,20 +104,15 @@ class ConfigControllerV3Test {
     @Mock
     private ConfigDetailService configDetailService;
     
-    @Mock
-    private ConfigMigrateService configMigrateService;
-    
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
         when(servletContext.getContextPath()).thenReturn("/nacos");
         ReflectionTestUtils.setField(configControllerV3, "configListenerStateDelegate", configListenerStateDelegate);
         ReflectionTestUtils.setField(configControllerV3, "configInfoPersistService", configInfoPersistService);
-        ReflectionTestUtils.setField(configControllerV3, "configInfoBetaPersistService", configInfoBetaPersistService);
         ReflectionTestUtils.setField(configControllerV3, "configInfoGrayPersistService", configInfoGrayPersistService);
         ReflectionTestUtils.setField(configControllerV3, "namespacePersistService", namespacePersistService);
         ReflectionTestUtils.setField(configControllerV3, "configOperationService", configOperationService);
-        ReflectionTestUtils.setField(configControllerV3, "configMigrateService", configMigrateService);
         mockmvc = MockMvcBuilders.standaloneSetup(configControllerV3).build();
     }
     

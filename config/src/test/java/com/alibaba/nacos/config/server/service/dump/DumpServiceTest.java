@@ -18,7 +18,6 @@ package com.alibaba.nacos.config.server.service.dump;
 
 import com.alibaba.nacos.config.server.manager.TaskManager;
 import com.alibaba.nacos.config.server.model.event.ConfigDataChangeEvent;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.dump.task.DumpTask;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService;
@@ -53,10 +52,6 @@ import static org.mockito.Mockito.times;
 @ExtendWith(SpringExtension.class)
 class DumpServiceTest {
     
-    private static final String BETA_TABLE_NAME = "config_info_beta";
-    
-    private static final String TAG_TABLE_NAME = "config_info_tag";
-    
     @Mock
     DefaultHistoryConfigCleaner defaultHistoryConfigCleaner = new DefaultHistoryConfigCleaner();
     
@@ -75,9 +70,6 @@ class DumpServiceTest {
     
     @Mock
     ServerMemberManager memberManager;
-    
-    @Mock
-    ConfigMigrateService configMigrateService;
     
     MockedStatic<EnvUtil> envUtilMockedStatic;
     
@@ -105,7 +97,7 @@ class DumpServiceTest {
         ReflectionTestUtils.setField(DynamicDataSource.getInstance(), "localDataSourceService", dataSourceService);
         ReflectionTestUtils.setField(DynamicDataSource.getInstance(), "basicDataSourceService", dataSourceService);
         dumpService = new ExternalDumpService(configInfoPersistService, namespacePersistService,
-                historyConfigInfoPersistService, configInfoGrayPersistService, memberManager, configMigrateService);
+                historyConfigInfoPersistService, configInfoGrayPersistService, memberManager);
         configExecutorMocked = Mockito.mockStatic(ConfigExecutor.class);
         historyConfigCleanerManagerMockedStatic = Mockito.mockStatic(HistoryConfigCleanerManager.class);
         historyConfigCleanerManagerMockedStatic.when(
@@ -151,9 +143,6 @@ class DumpServiceTest {
         configExecutorMocked.when(
                 () -> ConfigExecutor.scheduleConfigChangeTask(any(Runnable.class), anyInt(), any(TimeUnit.class)))
                 .thenAnswer(invocation -> null);
-        Mockito.when(namespacePersistService.isExistTable(BETA_TABLE_NAME)).thenReturn(true);
-        Mockito.when(namespacePersistService.isExistTable(TAG_TABLE_NAME)).thenReturn(true);
-        
         Mockito.when(configInfoPersistService.findConfigMaxId()).thenReturn(300L);
         dumpService.dumpOperate();
         

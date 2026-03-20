@@ -48,7 +48,6 @@ import com.alibaba.nacos.config.server.paramcheck.ConfigBlurSearchHttpParamExtra
 import com.alibaba.nacos.config.server.paramcheck.ConfigDefaultHttpParamExtractor;
 import com.alibaba.nacos.config.server.service.ConfigChangePublisher;
 import com.alibaba.nacos.config.server.service.ConfigDetailService;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.ConfigOperationService;
 import com.alibaba.nacos.config.server.service.listener.ConfigListenerStateDelegate;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
@@ -133,20 +132,17 @@ public class ConfigControllerV3 {
     
     private final ConfigListenerStateDelegate configListenerStateDelegate;
     
-    private final ConfigMigrateService configMigrateService;
-    
     public ConfigControllerV3(ConfigOperationService configOperationService,
             ConfigInfoPersistService configInfoPersistService, ConfigDetailService configDetailService,
             ConfigInfoGrayPersistService configInfoGrayPersistService,
             NamespacePersistService namespacePersistService,
-            ConfigListenerStateDelegate configListenerStateDelegate, ConfigMigrateService configMigrateService) {
+            ConfigListenerStateDelegate configListenerStateDelegate) {
         this.configOperationService = configOperationService;
         this.configInfoPersistService = configInfoPersistService;
         this.configDetailService = configDetailService;
         this.configInfoGrayPersistService = configInfoGrayPersistService;
         this.namespacePersistService = namespacePersistService;
         this.configListenerStateDelegate = configListenerStateDelegate;
-        this.configMigrateService = configMigrateService;
     }
     
     /**
@@ -240,7 +236,6 @@ public class ConfigControllerV3 {
         String group = configForm.getGroup();
         String namespaceId = NamespaceUtil.processNamespaceParameter(configForm.getNamespaceId());
         configInfoPersistService.updateConfigInfoMetadata(dataId, group, namespaceId, configTags, description);
-        configMigrateService.updateConfigMetadataMigrate(dataId, group, namespaceId, configTags, description);
         final Timestamp time = TimeUtils.getCurrentTime();
         ConfigTraceService.logPersistenceEvent(dataId, group, namespaceId, null, time.getTime(), remoteIp,
                 ConfigTraceService.PERSISTENCE_EVENT_METADATA, ConfigTraceService.PERSISTENCE_TYPE_PUB, null);

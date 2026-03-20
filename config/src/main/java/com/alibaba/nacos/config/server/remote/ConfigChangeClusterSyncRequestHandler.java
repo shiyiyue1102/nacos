@@ -23,11 +23,8 @@ import com.alibaba.nacos.api.remote.RemoteConstants;
 import com.alibaba.nacos.api.remote.request.RequestMeta;
 import com.alibaba.nacos.auth.annotation.Secured;
 import com.alibaba.nacos.common.utils.StringUtils;
-import com.alibaba.nacos.common.utils.VersionUtils;
-import com.alibaba.nacos.config.server.configuration.ConfigCompatibleConfig;
 import com.alibaba.nacos.config.server.model.gray.BetaGrayRule;
 import com.alibaba.nacos.config.server.model.gray.TagGrayRule;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.dump.DumpRequest;
 import com.alibaba.nacos.config.server.service.dump.DumpService;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
@@ -38,7 +35,6 @@ import com.alibaba.nacos.core.paramcheck.ExtractorManager;
 import com.alibaba.nacos.core.paramcheck.impl.ConfigRequestParamExtractor;
 import com.alibaba.nacos.core.remote.RequestHandler;
 import com.alibaba.nacos.core.remote.grpc.InvokeSource;
-import com.alibaba.nacos.core.utils.Loggers;
 import com.alibaba.nacos.plugin.auth.constant.ApiType;
 import com.alibaba.nacos.plugin.auth.constant.SignType;
 import org.springframework.stereotype.Component;
@@ -55,13 +51,9 @@ public class ConfigChangeClusterSyncRequestHandler
         extends RequestHandler<ConfigChangeClusterSyncRequest, ConfigChangeClusterSyncResponse> {
     
     private final DumpService dumpService;
-    
-    private ConfigMigrateService configMigrateService;
-    
-    public ConfigChangeClusterSyncRequestHandler(DumpService dumpService,
-            ConfigMigrateService configMigrateService) {
+        
+    public ConfigChangeClusterSyncRequestHandler(DumpService dumpService) {
         this.dumpService = dumpService;
-        this.configMigrateService = configMigrateService;
     }
 
     @Override
@@ -72,7 +64,7 @@ public class ConfigChangeClusterSyncRequestHandler
     public ConfigChangeClusterSyncResponse handle(ConfigChangeClusterSyncRequest configChangeSyncRequest,
             RequestMeta meta) throws NacosException {
         
-        checkCompatity(configChangeSyncRequest, meta);
+        checkCompatity(configChangeSyncRequest);
         
         ParamUtils.checkParam(configChangeSyncRequest.getTag());
         DumpRequest dumpRequest = DumpRequest.create(configChangeSyncRequest.getDataId(),
@@ -89,7 +81,7 @@ public class ConfigChangeClusterSyncRequestHandler
      *
      * @param configChangeSyncRequest request.
      */
-    private void checkCompatity(ConfigChangeClusterSyncRequest configChangeSyncRequest, RequestMeta meta) {
+    private void checkCompatity(ConfigChangeClusterSyncRequest configChangeSyncRequest) {
         if (PropertyUtil.isGrayCompatibleModel() && StringUtils.isBlank(configChangeSyncRequest.getGrayName())) {
             if (configChangeSyncRequest.isBeta() || StringUtils.isNotBlank(configChangeSyncRequest.getTag())) {
                 
@@ -105,51 +97,6 @@ public class ConfigChangeClusterSyncRequestHandler
             }
         }
         
-        if (!checkNamespaceCompatible(configChangeSyncRequest, meta)) {
-            return;
-        }
-        
-        if (StringUtils.isNotBlank(configChangeSyncRequest.getGrayName())) {
-            configMigrateService.namespaceMigrateGray(configChangeSyncRequest.getDataId(),
-                    configChangeSyncRequest.getGroup(), configChangeSyncRequest.getTenant(),
-                    configChangeSyncRequest.getGrayName());
-        } else {
-            configMigrateService.namespaceMigrate(configChangeSyncRequest.getDataId(),
-                    configChangeSyncRequest.getGroup(), configChangeSyncRequest.getTenant());
-        }
-        
-        configChangeSyncRequest.setTenant("public");
-    }
-    
-    /**
-     * Check namespace compatible boolean.
-     *
-     * @param configSyncRequest the config sync request
-     * @param meta              the meta
-     * @return the boolean
-     */
-    public boolean checkNamespaceCompatible(ConfigChangeClusterSyncRequest configSyncRequest, RequestMeta meta) {
-        if (!ConfigCompatibleConfig.getInstance().isNamespaceCompatibleMode()) {
-            return false;
-        }
-        final String ignoreCheckVersion = "3.0.0";
-        final String clusterVersionPrefixNew = "Nacos-Server:v";
-        final String clusterVersionPrefixOld = "Nacos-Java-Client:v";
-        try {
-            String version = null;
-            if (meta.getClientVersion().split(clusterVersionPrefixNew).length > 1) {
-                version = meta.getClientVersion().split(clusterVersionPrefixNew)[1];
-            } else {
-                version = meta.getClientVersion().split(clusterVersionPrefixOld)[1];
-            }
-            if (VersionUtils.compareVersion(version, ignoreCheckVersion) >= 0) {
-                return false;
-            }
-        } catch (Exception e) {
-            Loggers.REMOTE_DIGEST.error("checkCompatity error", e);
-        }
-        return StringUtils.equals(configSyncRequest.getTenant(), "public") || StringUtils.isBlank(
-                configSyncRequest.getTenant());
     }
     
 }

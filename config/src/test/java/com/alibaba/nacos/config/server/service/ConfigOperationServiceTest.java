@@ -63,14 +63,10 @@ class ConfigOperationServiceTest {
     @Mock
     private ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    @Mock
-    ConfigMigrateService configMigrateService;
-    
     @BeforeEach
     void setUp() throws Exception {
         EnvUtil.setEnvironment(new StandardEnvironment());
-        this.configOperationService = new ConfigOperationService(configInfoPersistService, configInfoGrayPersistService,
-                configMigrateService);
+        this.configOperationService = new ConfigOperationService(configInfoPersistService, configInfoGrayPersistService);
     }
     
     @Test

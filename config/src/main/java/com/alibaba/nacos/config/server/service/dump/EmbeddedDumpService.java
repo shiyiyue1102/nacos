@@ -20,7 +20,6 @@ import com.alibaba.nacos.common.utils.Observable;
 import com.alibaba.nacos.common.utils.Observer;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.common.utils.ThreadUtils;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService;
 import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService;
@@ -75,9 +74,9 @@ public class EmbeddedDumpService extends DumpService {
             NamespacePersistService namespacePersistService,
             HistoryConfigInfoPersistService historyConfigInfoPersistService,
             ConfigInfoGrayPersistService configInfoGrayPersistService, ServerMemberManager memberManager,
-            ProtocolManager protocolManager, ConfigMigrateService configMigrateService) {
+            ProtocolManager protocolManager) {
         super(configInfoPersistService, namespacePersistService, historyConfigInfoPersistService,
-                configInfoGrayPersistService, memberManager, configMigrateService);
+                configInfoGrayPersistService, memberManager);
         this.protocolManager = protocolManager;
     }
     

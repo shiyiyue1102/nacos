@@ -22,7 +22,6 @@ import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.model.ConfigInfoGrayWrapper;
 import com.alibaba.nacos.config.server.model.ConfigInfoStateWrapper;
 import com.alibaba.nacos.config.server.service.ConfigCacheService;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
 import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService;
 import com.alibaba.nacos.config.server.utils.ConfigExecutor;
@@ -45,19 +44,15 @@ public class DumpChangeGrayConfigWorker implements Runnable {
     
     ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    ConfigMigrateService configMigrateService;
-    
     private final HistoryConfigInfoPersistService historyConfigInfoPersistService;
     
     int pageSize = 100;
     
     public DumpChangeGrayConfigWorker(ConfigInfoGrayPersistService configInfoGrayPersistService, Timestamp startTime,
-            HistoryConfigInfoPersistService historyConfigInfoPersistService,
-            ConfigMigrateService configMigrateService) {
+            HistoryConfigInfoPersistService historyConfigInfoPersistService) {
         this.configInfoGrayPersistService = configInfoGrayPersistService;
         this.startTime = startTime;
         this.historyConfigInfoPersistService = historyConfigInfoPersistService;
-        this.configMigrateService = configMigrateService;
     }
     
     @Override
@@ -89,7 +84,6 @@ public class DumpChangeGrayConfigWorker implements Runnable {
                                 configInfo.getTenant(), grayName);
                         LogUtil.DEFAULT_LOG.info("[dump-gray-delete-ok], groupKey: {}, tenant: {}, grayName: {}",
                                 GroupKey2.getKey(configInfo.getDataId(), configInfo.getGroup()), configInfo.getTenant(), grayName);
-                        configMigrateService.checkDeletedConfigGrayMigrateState(configInfo);
                     }
                 }
                 if (configDeleted.size() < pageSize) {
@@ -110,7 +104,6 @@ public class DumpChangeGrayConfigWorker implements Runnable {
                 List<ConfigInfoGrayWrapper> changeConfigs = configInfoGrayPersistService.findChangeConfig(startTime,
                         changeCursorId, pageSize);
                 for (ConfigInfoGrayWrapper cf : changeConfigs) {
-                    configMigrateService.checkChangedConfigGrayMigrateState(cf);
                     if (StringUtils.isBlank(cf.getTenant())) {
                         continue;
                     }

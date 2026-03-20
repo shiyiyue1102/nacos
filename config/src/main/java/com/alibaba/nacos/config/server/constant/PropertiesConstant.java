@@ -67,6 +67,4 @@ public class PropertiesConstant {
     
     public static final String GRAY_CAPATIBEL_MODEL = "nacos.config.gray.compatible.model";
     
-    public static final String NAMESPACE_COMPATIBLE_MODE = "nacos.config.namespace.compatible.mode";
-    
 }
