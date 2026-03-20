@@ -406,7 +406,7 @@ public class ConsoleConfigController {
      * Execute to query beta operation.
      *
      * @param configForm  config form
-     * @return Result containing the ConfigInfo4Beta details.
+     * @return Result containing the ConfigGrayInfo details.
      * @throws NacosException If a Nacos-specific error occurs.
      */
     @GetMapping("/beta")

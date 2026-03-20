@@ -216,7 +216,7 @@ public interface ConfigHandler {
      * @param dataId      the dataId
      * @param group       the group
      * @param namespaceId the namespaceId
-     * @return ConfigInfo4Beta containing the beta configuration details
+     * @return ConfigGrayInfo containing the beta configuration details
      * @throws NacosException if an error occurs while querying the beta configuration
      */
     ConfigGrayInfo queryBetaConfig(String dataId, String group, String namespaceId) throws NacosException;

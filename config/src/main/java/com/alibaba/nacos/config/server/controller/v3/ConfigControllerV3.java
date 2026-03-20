@@ -51,13 +51,11 @@ import com.alibaba.nacos.config.server.service.ConfigDetailService;
 import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.ConfigOperationService;
 import com.alibaba.nacos.config.server.service.listener.ConfigListenerStateDelegate;
-import com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService;
 import com.alibaba.nacos.config.server.service.trace.ConfigTraceService;
 import com.alibaba.nacos.config.server.utils.GroupKey;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
-import com.alibaba.nacos.config.server.utils.PropertyUtil;
 import com.alibaba.nacos.config.server.utils.RequestUtil;
 import com.alibaba.nacos.config.server.utils.ResponseUtil;
 import com.alibaba.nacos.config.server.utils.TimeUtils;
@@ -131,33 +129,24 @@ public class ConfigControllerV3 {
     
     private final ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    private final ConfigInfoBetaPersistService configInfoBetaPersistService;
-    
     private final NamespacePersistService namespacePersistService;
     
     private final ConfigListenerStateDelegate configListenerStateDelegate;
     
     private final ConfigMigrateService configMigrateService;
     
-    /**
-     * Flag to indicate if the table `config_info_beta` exists, which means the old version of table schema is used.
-     */
-    private boolean oldTableVersion;
-    
     public ConfigControllerV3(ConfigOperationService configOperationService,
             ConfigInfoPersistService configInfoPersistService, ConfigDetailService configDetailService,
             ConfigInfoGrayPersistService configInfoGrayPersistService,
-            ConfigInfoBetaPersistService configInfoBetaPersistService, NamespacePersistService namespacePersistService,
+            NamespacePersistService namespacePersistService,
             ConfigListenerStateDelegate configListenerStateDelegate, ConfigMigrateService configMigrateService) {
         this.configOperationService = configOperationService;
         this.configInfoPersistService = configInfoPersistService;
         this.configDetailService = configDetailService;
         this.configInfoGrayPersistService = configInfoGrayPersistService;
-        this.configInfoBetaPersistService = configInfoBetaPersistService;
         this.namespacePersistService = namespacePersistService;
         this.configListenerStateDelegate = configListenerStateDelegate;
         this.configMigrateService = configMigrateService;
-        this.oldTableVersion = namespacePersistService.isExistTable("config_info_beta");
     }
     
     /**
@@ -382,8 +371,6 @@ public class ConfigControllerV3 {
         try {
             configInfoGrayPersistService.removeConfigInfoGray(dataId, groupName, namespaceId, BetaGrayRule.TYPE_BETA,
                     remoteIp, RequestUtil.getSrcUserName(httpServletRequest));
-            configMigrateService.removeConfigInfoGrayMigrate(dataId, groupName, namespaceId, BetaGrayRule.TYPE_BETA,
-                    remoteIp, RequestUtil.getSrcUserName(httpServletRequest));
         } catch (Throwable e) {
             LOGGER.error("remove beta data error", e);
             return Result.failure(ErrorCode.SERVER_ERROR.getCode(), "remove beta data error", false);
@@ -391,9 +378,6 @@ public class ConfigControllerV3 {
         
         ConfigTraceService.logPersistenceEvent(dataId, groupName, namespaceId, requestIpApp, System.currentTimeMillis(),
                 remoteIp, ConfigTraceService.PERSISTENCE_EVENT_BETA, ConfigTraceService.PERSISTENCE_TYPE_REMOVE, null);
-        if (PropertyUtil.isGrayCompatibleModel() && oldTableVersion) {
-            configInfoBetaPersistService.removeConfigInfo4Beta(dataId, groupName, namespaceId);
-        }
         ConfigChangePublisher.notifyConfigChange(
                 new ConfigDataChangeEvent(dataId, groupName, namespaceId, BetaGrayRule.TYPE_BETA,
                         System.currentTimeMillis()));

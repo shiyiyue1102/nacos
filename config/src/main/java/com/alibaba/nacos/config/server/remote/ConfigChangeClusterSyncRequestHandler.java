@@ -96,13 +96,8 @@ public class ConfigChangeClusterSyncRequestHandler
                 String grayName = null;
                 //from old server ,beta or tag persist into old model,try migrate and transfer gray model.
                 if (configChangeSyncRequest.isBeta()) {
-                    configMigrateService.checkMigrateBeta(configChangeSyncRequest.getDataId(),
-                            configChangeSyncRequest.getGroup(), configChangeSyncRequest.getTenant());
                     grayName = BetaGrayRule.TYPE_BETA;
                 } else {
-                    configMigrateService.checkMigrateTag(configChangeSyncRequest.getDataId(),
-                            configChangeSyncRequest.getGroup(), configChangeSyncRequest.getTenant(),
-                            configChangeSyncRequest.getTag());
                     grayName = TagGrayRule.TYPE_TAG + "_" + configChangeSyncRequest.getTag();
                 }
                 configChangeSyncRequest.setGrayName(grayName);
